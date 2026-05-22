@@ -15,7 +15,7 @@ public final class BottomNavHelper {
 
     public static void setupBottomNav(AppCompatActivity activity, int selectedItemId) {
         wireItem(activity, R.id.nav_home_item, DashboardActivity.class, selectedItemId);
-        wireItem(activity, R.id.nav_documents_item, ViewDocumentActivity.class, selectedItemId);
+        wireItem(activity, R.id.nav_documents_item, DocumentsActivity.class, selectedItemId);
         wireItem(activity, R.id.nav_ai_item, AiActivity.class, selectedItemId);
         wireItem(activity, R.id.nav_settings_item, SettingsActivity.class, selectedItemId);
 
@@ -60,4 +60,3 @@ public final class BottomNavHelper {
         }
     }
 }
-

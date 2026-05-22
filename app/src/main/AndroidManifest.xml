@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DocuOrg">
         <activity
+            android:name=".DocumentsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddDocumentActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity

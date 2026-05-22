@@ -19,4 +19,7 @@
     <color name="tag_pill_bg">#E7F4F3</color>
     <color name="doc_preview_bg">#E3E7EE</color>
     <color name="delete_red">#D64545</color>
+    <color name="upload_area_bg">#E6F2FA</color>
+    <color name="info_box_bg">#E6F4FF</color>
+    <color name="chip_selected_bg">#E0EDF8</color>
 </resources>

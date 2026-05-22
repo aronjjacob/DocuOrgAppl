@@ -142,7 +142,7 @@
                             android:fontFamily="sans-serif-medium"
                             android:text="@string/total_documents_value"
                             android:textColor="@color/primary_teal"
-                            android:textSize="24sp" />
+                            android:textSize="32sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
