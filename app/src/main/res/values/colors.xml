@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="screen_background">#EEF1FF</color>
+    <color name="card_background">#FFFFFFFF</color>
+    <color name="primary_teal">#0A6B66</color>
+    <color name="text_primary">#1E1E1E</color>
+    <color name="text_secondary">#6E7781</color>
+    <color name="text_hint">#A0A6AE</color>
+    <color name="link_color">#0A6B66</color>
+    <color name="field_stroke">#D7DCE3</color>
+    <color name="logo_ring">#E5ECF8</color>
+    <color name="dashboard_background">#F5F6FB</color>
+    <color name="category_icon_bg">#E6F4F3</color>
+    <color name="chip_bg">#E7F4F3</color>
+    <color name="doc_thumb_bg">#D9DEE6</color>
+    <color name="doc_thumb_bg_alt">#E8D8D8</color>
+    <color name="tag_pill_bg">#E7F4F3</color>
+    <color name="doc_preview_bg">#E3E7EE</color>
+    <color name="delete_red">#D64545</color>
+</resources>
