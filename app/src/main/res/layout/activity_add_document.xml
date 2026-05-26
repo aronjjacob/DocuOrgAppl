@@ -115,6 +115,24 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
+                <TextView
+                    android:id="@+id/selected_file_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/no_file_selected"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp" />
+
+                <ImageView
+                    android:id="@+id/selected_file_preview"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="10dp"
+                    android:contentDescription="@string/selected_file_preview"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -168,13 +186,13 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:placeholderText="@string/document_title_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/title_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/document_title_hint"
                     android:inputType="textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -191,14 +209,18 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
-                app:endIconMode="dropdown_menu">
+                app:endIconMode="dropdown_menu"
+                app:placeholderText="@string/category_hint">
 
-                <AutoCompleteTextView
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/category_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/category_hint"
-                    android:inputType="none" />
+                    android:contentDescription="@string/category_label"
+                    android:hint="@string/category_label"
+                    android:inputType="none"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -213,15 +235,16 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:endIconDrawable="@drawable/ic_calendar"
+                app:endIconMode="custom"
+                app:placeholderText="@string/date_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/date_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/date_hint"
-                    android:inputType="date"
-                    android:drawableEnd="@drawable/ic_calendar" />
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.card.MaterialCardView
@@ -253,21 +276,26 @@
                         android:layout_marginTop="12dp"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/amount_input_layout"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/amount_label"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
+                            android:hint="@string/amount_label"
+                            app:boxBackgroundColor="@color/card_background"
+                            app:boxBackgroundMode="outline"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxStrokeColor="@color/field_stroke"
+                            app:placeholderText="@string/amount_value">
 
-                        <TextView
-                            android:id="@+id/amount_value"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/amount_value"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/amount_input"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal" />
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
                     <View
@@ -282,21 +310,26 @@
                         android:layout_marginTop="12dp"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/store_name_input_layout"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/store_name_label"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
+                            android:hint="@string/store_name_label"
+                            app:boxBackgroundColor="@color/card_background"
+                            app:boxBackgroundMode="outline"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxStrokeColor="@color/field_stroke"
+                            app:placeholderText="@string/store_name_hint">
 
-                        <TextView
-                            android:id="@+id/store_name_value"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/store_name_hint"
-                            android:textColor="@color/text_hint"
-                            android:textSize="14sp" />
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/store_name_input"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textCapWords" />
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -317,35 +350,6 @@
                 android:layout_marginTop="8dp"
                 app:singleLine="false">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_coffee"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_coffee"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_business"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_business"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_travel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_travel"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/tag_add"
@@ -370,13 +374,13 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:placeholderText="@string/notes_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/notes_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/notes_hint"
                     android:inputType="textMultiLine"
                     android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>

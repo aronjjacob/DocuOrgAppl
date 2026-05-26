@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="document_categories">
+        <item>@string/doc_type_receipt</item>
+        <item>@string/doc_type_tax</item>
+        <item>@string/doc_type_medical</item>
+        <item>@string/doc_type_personal</item>
+        <item>@string/category_id</item>
+        <item>@string/category_more</item>
+    </string-array>
+</resources>
+
