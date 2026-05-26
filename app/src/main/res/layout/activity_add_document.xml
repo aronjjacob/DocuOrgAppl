@@ -115,6 +115,24 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
+                <TextView
+                    android:id="@+id/selected_file_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/no_file_selected"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp" />
+
+                <ImageView
+                    android:id="@+id/selected_file_preview"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="10dp"
+                    android:contentDescription="@string/selected_file_preview"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

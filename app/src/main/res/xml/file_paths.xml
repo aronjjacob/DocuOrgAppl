@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Allow sharing files created inside the app-specific external Pictures directory. -->
+    <external-files-path
+        name="images"
+        path="Pictures/" />
+
+    <!-- Fallback location (rare) if we decide to use cache in the future. -->
+    <cache-path
+        name="cache"
+        path="/" />
+</paths>
+
