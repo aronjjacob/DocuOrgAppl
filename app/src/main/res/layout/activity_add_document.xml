@@ -350,35 +350,6 @@
                 android:layout_marginTop="8dp"
                 app:singleLine="false">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_coffee"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_coffee"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_business"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_business"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/tag_travel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tag_travel"
-                    android:textColor="@color/primary_teal"
-                    app:chipBackgroundColor="@color/chip_bg"
-                    app:closeIconVisible="true"
-                    app:closeIconTint="@color/primary_teal" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/tag_add"
