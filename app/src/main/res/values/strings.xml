@@ -148,4 +148,7 @@
     <string name="settings_version_value">v2.4.0-stable</string>
     <string name="settings_help_title">Help Center</string>
     <string name="settings_logout">Logout</string>
+    <string name="ai_pick_image">Select an image to scan</string>
+    <string name="ai_camera_unavailable">Camera not available. Please select a file instead.</string>
+    <string name="ai_image_loaded">Image ready for scanning</string>
 </resources>
