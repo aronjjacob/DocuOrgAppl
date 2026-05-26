@@ -63,6 +63,8 @@
     <string name="add_document_title">Add New Document</string>
     <string name="upload_document_image">Upload Document Image</string>
     <string name="upload_formats">PDF, JPG, or PNG up to 10MB</string>
+    <string name="no_file_selected">No file selected</string>
+    <string name="selected_file_preview">Selected file preview</string>
     <string name="gallery">Gallery</string>
     <string name="camera">Camera</string>
     <string name="document_title_label">Document Title</string>
