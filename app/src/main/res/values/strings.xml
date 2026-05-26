@@ -65,6 +65,7 @@
     <string name="upload_formats">PDF, JPG, or PNG up to 10MB</string>
     <string name="no_file_selected">No file selected</string>
     <string name="selected_file_preview">Selected file preview</string>
+    <string name="ai_scan_in_progress">Scanning with AI...</string>
     <string name="gallery">Gallery</string>
     <string name="camera">Camera</string>
     <string name="document_title_label">Document Title</string>
@@ -153,4 +154,6 @@
     <string name="ai_pick_image">Select an image to scan</string>
     <string name="ai_camera_unavailable">Camera not available. Please select a file instead.</string>
     <string name="ai_image_loaded">Image ready for scanning</string>
+    <string name="ai_scanning_title">Scanning Document</string>
+    <string name="ai_scanning_subtitle">Analyzing your document with AI...</string>
 </resources>
