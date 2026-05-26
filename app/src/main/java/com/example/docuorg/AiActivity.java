@@ -6,6 +6,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -125,7 +126,7 @@ public class AiActivity extends AppCompatActivity {
         mainHandler.post(() -> scanningOverlay.setVisibility(View.VISIBLE));
         aiScanClient.scanImage(this, uri, new AiScanClient.ScanCallback() {
             @Override
-            public void onSuccess(AiScanClient.DocumentScanResult result) {
+            public void onSuccess(@NonNull AiScanClient.DocumentScanResult result) {
                 mainHandler.post(() -> {
                     scanningOverlay.setVisibility(View.GONE);
                     openAddDocumentWithResult(uri, result);
@@ -133,7 +134,7 @@ public class AiActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(String message) {
+            public void onError(@NonNull String message) {
                 mainHandler.post(() -> {
                     scanningOverlay.setVisibility(View.GONE);
                     Toast.makeText(AiActivity.this, message, Toast.LENGTH_LONG).show();
@@ -144,6 +145,7 @@ public class AiActivity extends AppCompatActivity {
 
     private void openAddDocumentWithResult(Uri imageUri, AiScanClient.DocumentScanResult result) {
         Intent intent = new Intent(this, AddDocumentActivity.class);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(AddDocumentActivity.EXTRA_IMAGE_URI, imageUri.toString());
         intent.putExtra(AddDocumentActivity.EXTRA_TITLE, result.title);
         intent.putExtra(AddDocumentActivity.EXTRA_CATEGORY, result.category);

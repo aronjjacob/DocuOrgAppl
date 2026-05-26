@@ -37,6 +37,10 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,8 +49,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class AddDocumentActivity extends AppCompatActivity {
 
@@ -67,6 +75,8 @@ public class AddDocumentActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "docuorg_prefs";
     private static final String PREFS_DOCUMENTS_JSON = "documents_json";
     private static final long MAX_FILE_BYTES = 10L * 1024L * 1024L;
+    private static final String FIRESTORE_USERS_COLLECTION = "users";
+    private static final String FIRESTORE_DOCUMENTS_COLLECTION = "documents";
 
     private ActivityResultLauncher<String[]> openDocumentLauncher;
     private ActivityResultLauncher<Uri> takePictureLauncher;
@@ -83,6 +93,8 @@ public class AddDocumentActivity extends AppCompatActivity {
     private TextInputLayout dateInputLayout;
     private TextInputEditText dateInput;
     private TextInputEditText notesInput;
+    private TextInputLayout titleInputLayout;
+    private TextInputLayout categoryInputLayout;
 
     private MaterialCardView receiptDetailsCard;
     private TextInputEditText amountInput;
@@ -92,18 +104,24 @@ public class AddDocumentActivity extends AppCompatActivity {
     private Chip addTagChip;
 
     private Long selectedDateMillis;
+    private FirebaseFirestore firestore;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_add_document);
+        firestore = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
 
         // Initialize views
         selectedFileLabel = findViewById(R.id.selected_file_label);
         selectedFilePreview = findViewById(R.id.selected_file_preview);
 
+        titleInputLayout = findViewById(R.id.title_input_layout);
         titleInput = findViewById(R.id.title_input);
+        categoryInputLayout = findViewById(R.id.category_input_layout);
         categoryInput = findViewById(R.id.category_input);
         dateInputLayout = findViewById(R.id.date_input_layout);
         dateInput = findViewById(R.id.date_input);
@@ -351,8 +369,8 @@ public class AddDocumentActivity extends AppCompatActivity {
         }
     }
 
-    private JSONArray collectTags() {
-        JSONArray tags = new JSONArray();
+    private List<String> collectTags() {
+        List<String> tags = new ArrayList<>();
         if (tagsGroup == null) {
             return tags;
         }
@@ -365,7 +383,7 @@ public class AddDocumentActivity extends AppCompatActivity {
                 }
                 CharSequence text = chip.getText();
                 if (!TextUtils.isEmpty(text)) {
-                    tags.put(text.toString());
+                    tags.add(text.toString());
                 }
             }
         }
@@ -454,63 +472,164 @@ public class AddDocumentActivity extends AppCompatActivity {
     }
 
     private void saveDocument() {
-        String title = titleInput != null && titleInput.getText() != null
-                ? titleInput.getText().toString().trim()
-                : "";
-        String category = categoryInput != null ? categoryInput.getText().toString().trim() : "";
-        String dateText = dateInput != null && dateInput.getText() != null
-                ? dateInput.getText().toString().trim()
-                : "";
+        try {
+            clearValidationErrors();
+            boolean hasError = false;
+            if (selectedDocumentUri == null) {
+                Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
+                android.util.Log.w("AddDocumentActivity", "saveDocument blocked: selectedDocumentUri is null");
+                hasError = true;
+            }
+            if (TextUtils.isEmpty(titleInput.getText().toString())) {
+                setInputError(titleInputLayout, getString(R.string.error_missing_required));
+                hasError = true;
+            }
+            if (TextUtils.isEmpty(categoryInput.getText().toString())) {
+                setInputError(categoryInputLayout, getString(R.string.error_missing_required));
+                hasError = true;
+            }
+            if (TextUtils.isEmpty(dateInput.getText().toString())) {
+                setInputError(dateInputLayout, getString(R.string.error_missing_required));
+                hasError = true;
+            }
+            if (hasError) {
+                Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        if (selectedDocumentUri == null || TextUtils.isEmpty(title) || TextUtils.isEmpty(category) || TextUtils.isEmpty(dateText)) {
-            Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
-            return;
+            updateReceiptDetailsVisibility(categoryInput.getText().toString());
+
+            String notes = getInputText(notesInput);
+            String amount = getInputText(amountInput);
+            String storeName = getInputText(storeNameInput);
+
+            long documentId = System.currentTimeMillis();
+            List<String> tags = collectTags();
+
+            Map<String, Object> docData = new HashMap<>();
+            docData.put("id", documentId);
+            docData.put("uri", selectedDocumentUri.toString());
+            docData.put("displayName", getDisplayName(selectedDocumentUri));
+            try {
+                docData.put("mime", getContentResolver().getType(selectedDocumentUri));
+            } catch (SecurityException ignored) {
+                docData.put("mime", "");
+            }
+            docData.put("title", titleInput.getText().toString());
+            docData.put("category", categoryInput.getText().toString());
+            docData.put("dateText", dateInput.getText().toString());
+            if (selectedDateMillis != null) {
+                docData.put("dateMillis", selectedDateMillis);
+            }
+            docData.put("notes", notes);
+            docData.put("tags", tags);
+
+            if (categoryInput.getText().toString().equalsIgnoreCase(getString(R.string.doc_type_receipt))) {
+                docData.put("amount", amount);
+                docData.put("storeName", storeName);
+            }
+
+            FirebaseUser currentUser = auth.getCurrentUser();
+            if (currentUser == null) {
+                boolean localSaved = saveDocumentLocally(documentId, docData);
+                Toast.makeText(
+                        this,
+                        localSaved ? "Saved locally. Sign in to sync to Firebase." : getString(R.string.error_unable_to_save),
+                        Toast.LENGTH_SHORT
+                ).show();
+                if (localSaved) {
+                    finish();
+                }
+                return;
+            }
+
+            String userId = currentUser.getUid();
+            firestore.collection(FIRESTORE_USERS_COLLECTION)
+                    .document(userId)
+                    .collection(FIRESTORE_DOCUMENTS_COLLECTION)
+                    .document(String.valueOf(documentId))
+                    .set(docData, SetOptions.merge())
+                    .addOnSuccessListener(unused -> {
+                        // Keep local cache for quick local reads and offline fallback.
+                        saveDocumentLocally(documentId, docData);
+                        Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        boolean localSaved = saveDocumentLocally(documentId, docData);
+                        android.util.Log.e("AddDocumentActivity", "Cloud save failed", e);
+                        Toast.makeText(
+                                this,
+                                localSaved ? "Cloud save failed. Saved locally instead." : getString(R.string.error_unable_to_save),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                        if (localSaved) {
+                            finish();
+                        }
+                    });
+        } catch (Exception e) {
+            android.util.Log.e("AddDocumentActivity", "Save failed", e);
+            Toast.makeText(this, getString(R.string.error_unable_to_save), Toast.LENGTH_SHORT).show();
         }
+    }
 
-        updateReceiptDetailsVisibility(category);
-
-        String notes = notesInput != null && notesInput.getText() != null
-                ? notesInput.getText().toString().trim()
-                : "";
-        String amount = amountInput != null && amountInput.getText() != null
-                ? amountInput.getText().toString().trim()
-                : "";
-        String storeName = storeNameInput != null && storeNameInput.getText() != null
-                ? storeNameInput.getText().toString().trim()
-                : "";
-
+    private boolean saveDocumentLocally(long documentId, Map<String, Object> docData) {
         try {
             JSONObject doc = new JSONObject();
-            doc.put("id", System.currentTimeMillis());
-            doc.put("uri", selectedDocumentUri.toString());
-            doc.put("displayName", getDisplayName(selectedDocumentUri));
-            doc.put("mime", getContentResolver().getType(selectedDocumentUri));
-            doc.put("title", title);
-            doc.put("category", category);
-            doc.put("dateText", dateText);
-            if (selectedDateMillis != null) {
-                doc.put("dateMillis", selectedDateMillis);
-            }
-            doc.put("notes", notes);
-            doc.put("tags", collectTags());
+            doc.put("id", documentId);
+            doc.put("uri", valueAsString(docData.get("uri")));
+            doc.put("displayName", valueAsString(docData.get("displayName")));
+            doc.put("mime", valueAsString(docData.get("mime")));
+            doc.put("title", valueAsString(docData.get("title")));
+            doc.put("category", valueAsString(docData.get("category")));
+            doc.put("dateText", valueAsString(docData.get("dateText")));
 
-            // Optional receipt metadata.
-            if (category.equalsIgnoreCase(getString(R.string.doc_type_receipt))) {
-                doc.put("amount", amount);
-                doc.put("storeName", storeName);
+            Object dateMillis = docData.get("dateMillis");
+            if (dateMillis instanceof Long) {
+                doc.put("dateMillis", (Long) dateMillis);
+            }
+
+            doc.put("notes", valueAsString(docData.get("notes")));
+
+            JSONArray tagsArray = new JSONArray();
+            Object tagsValue = docData.get("tags");
+            if (tagsValue instanceof List<?>) {
+                for (Object tag : (List<?>) tagsValue) {
+                    if (tag != null) {
+                        tagsArray.put(String.valueOf(tag));
+                    }
+                }
+            }
+            doc.put("tags", tagsArray);
+
+            Object amount = docData.get("amount");
+            if (amount != null) {
+                doc.put("amount", String.valueOf(amount));
+            }
+            Object storeName = docData.get("storeName");
+            if (storeName != null) {
+                doc.put("storeName", String.valueOf(storeName));
             }
 
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
             JSONArray docs = new JSONArray(raw);
             docs.put(doc);
-            prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).apply();
-
-            Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
-            finish();
+            return prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).commit();
         } catch (JSONException e) {
-            Toast.makeText(this, R.string.error_unable_to_save, Toast.LENGTH_SHORT).show();
+            return false;
         }
+    }
+
+    private String getInputText(TextInputEditText input) {
+        if (input == null || input.getText() == null) {
+            return "";
+        }
+        return input.getText().toString().trim();
+    }
+
+    private String valueAsString(Object value) {
+        return value != null ? String.valueOf(value) : "";
     }
 
     private void updateSelectedFileUi(Uri uri, String displayNameOverride) {
@@ -588,13 +707,6 @@ public class AddDocumentActivity extends AppCompatActivity {
             String[] tags = intent.getStringArrayExtra(EXTRA_TAGS);
             if (tags != null && tagsGroup != null) {
                 // Remove all views except the add tag chip
-                int addTagIndex = -1;
-                for (int i = 0; i < tagsGroup.getChildCount(); i++) {
-                    if (tagsGroup.getChildAt(i) == addTagChip) {
-                        addTagIndex = i;
-                        break;
-                    }
-                }
                 tagsGroup.removeAllViews();
 
                 for (String tag : tags) {
@@ -623,5 +735,18 @@ public class AddDocumentActivity extends AppCompatActivity {
         } catch (Exception e) {
             android.util.Log.w("AddDocumentActivity", "Could not set text for view " + viewId, e);
         }
+    }
+
+    private void clearValidationErrors() {
+        setInputError(titleInputLayout, null);
+        setInputError(categoryInputLayout, null);
+        setInputError(dateInputLayout, null);
+    }
+
+    private void setInputError(TextInputLayout layout, String error) {
+        if (layout == null) {
+            return;
+        }
+        layout.setError(error);
     }
 }
