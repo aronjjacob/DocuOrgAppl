@@ -108,6 +108,8 @@
     <string name="filter_personal">Personal</string>
     <string name="recent_documents_title">Recent Documents</string>
     <string name="grid_view">Grid View</string>
+    <string name="no_documents_yet">No documents yet</string>
+    <string name="document_icon">Document icon</string>
     <string name="more_options">More options</string>
     <string name="doc_target_receipt">Target Receipt</string>
     <string name="doc_blood_test">Blood Test Results</string>
