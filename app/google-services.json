@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "94720127144",
+    "project_id": "docuorg-934cc",
+    "storage_bucket": "docuorg-934cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94720127144:android:e96f34f66c8fec5182d29d",
+        "android_client_info": {
+          "package_name": "com.example.docuorg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAisA_SsHAtzbSPLkcGetvcS0bxRv3LDug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
