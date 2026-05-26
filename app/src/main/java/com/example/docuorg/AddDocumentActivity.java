@@ -542,51 +542,41 @@ public class AddDocumentActivity extends AppCompatActivity {
                 docData.put("storeName", storeName);
             }
 
-            FirebaseUser currentUser = auth.getCurrentUser();
-            if (currentUser == null) {
-                boolean localSaved = saveDocumentLocally(documentId, docData);
-                Toast.makeText(
-                        this,
-                        localSaved ? "Saved locally. Sign in to sync to Firebase." : getString(R.string.error_unable_to_save),
-                        Toast.LENGTH_SHORT
-                ).show();
-                if (localSaved) {
-                    setResult(RESULT_OK);
-                    finish();
-                } else if (saveButton != null) {
+            // Always save locally first so the UI can return immediately.
+            // Cloud sync is best-effort and should not block navigation.
+            boolean localSaved = saveDocumentLocally(documentId, docData);
+            if (!localSaved) {
+                Toast.makeText(this, getString(R.string.error_unable_to_save), Toast.LENGTH_SHORT).show();
+                if (saveButton != null) {
                     saveButton.setEnabled(true);
                 }
                 return;
             }
 
+            FirebaseUser currentUser = auth.getCurrentUser();
+            if (currentUser == null) {
+                Toast.makeText(
+                        this,
+                        "Saved locally. Sign in to sync to Firebase.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                setResult(RESULT_OK);
+                finish();
+                return;
+            }
+
             String userId = currentUser.getUid();
+            // Don't block navigation on cloud sync.
             firestore.collection(FIRESTORE_USERS_COLLECTION)
                     .document(userId)
                     .collection(FIRESTORE_DOCUMENTS_COLLECTION)
                     .document(String.valueOf(documentId))
                     .set(docData, SetOptions.merge())
-                    .addOnSuccessListener(this, unused -> {
-                        // Keep local cache for quick local reads and offline fallback.
-                        saveDocumentLocally(documentId, docData);
-                        Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();
-                    })
-                    .addOnFailureListener(this, e -> {
-                        boolean localSaved = saveDocumentLocally(documentId, docData);
-                        android.util.Log.e("AddDocumentActivity", "Cloud save failed", e);
-                        Toast.makeText(
-                                this,
-                                localSaved ? "Cloud save failed. Saved locally instead." : getString(R.string.error_unable_to_save),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        if (localSaved) {
-                            setResult(RESULT_OK);
-                            finish();
-                        } else if (saveButton != null) {
-                            saveButton.setEnabled(true);
-                        }
-                    });
+                    .addOnFailureListener(this, e -> android.util.Log.e("AddDocumentActivity", "Cloud save failed", e));
+
+            Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
+            finish();
         } catch (Exception e) {
             android.util.Log.e("AddDocumentActivity", "Save failed", e);
             Toast.makeText(this, getString(R.string.error_unable_to_save), Toast.LENGTH_SHORT).show();
@@ -636,7 +626,13 @@ public class AddDocumentActivity extends AppCompatActivity {
 
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
-            JSONArray docs = new JSONArray(raw);
+            JSONArray docs;
+            try {
+                docs = new JSONArray(raw);
+            } catch (JSONException ignored) {
+                // If the stored value was corrupted, reset to a new list.
+                docs = new JSONArray();
+            }
             docs.put(doc);
             // Prefer apply() (async) to avoid rare commit() failures blocking navigation.
             prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).apply();
