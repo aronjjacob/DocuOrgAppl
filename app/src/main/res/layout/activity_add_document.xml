@@ -186,13 +186,14 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:expandedHintEnabled="false"
+                app:placeholderText="@string/document_title_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/title_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/document_title_hint"
                     android:inputType="textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -209,13 +210,14 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
-                app:endIconMode="dropdown_menu">
+                app:endIconMode="dropdown_menu"
+                app:expandedHintEnabled="false"
+                app:placeholderText="@string/category_hint">
 
                 <AutoCompleteTextView
                     android:id="@+id/category_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/category_hint"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -231,13 +233,14 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:expandedHintEnabled="false"
+                app:placeholderText="@string/date_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/date_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/date_hint"
                     android:inputType="date"
                     android:drawableEnd="@drawable/ic_calendar" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -388,13 +391,14 @@
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/field_stroke">
+                app:boxStrokeColor="@color/field_stroke"
+                app:expandedHintEnabled="false"
+                app:placeholderText="@string/notes_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/notes_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/notes_hint"
                     android:inputType="textMultiLine"
                     android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
