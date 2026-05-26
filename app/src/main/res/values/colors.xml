@@ -22,4 +22,5 @@
     <color name="upload_area_bg">#E6F2FA</color>
     <color name="info_box_bg">#E6F4FF</color>
     <color name="chip_selected_bg">#E0EDF8</color>
+    <color name="logout_bg">#FCE6E6</color>
 </resources>
