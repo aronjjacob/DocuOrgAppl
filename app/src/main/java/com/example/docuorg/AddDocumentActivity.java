@@ -103,6 +103,8 @@ public class AddDocumentActivity extends AppCompatActivity {
     private ChipGroup tagsGroup;
     private Chip addTagChip;
 
+    private View saveButton;
+
     private Long selectedDateMillis;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
@@ -155,7 +157,10 @@ public class AddDocumentActivity extends AppCompatActivity {
         // Set up click listeners
         findViewById(R.id.add_document_back).setOnClickListener(view -> finish());
         findViewById(R.id.cancel_button).setOnClickListener(view -> finish());
-        findViewById(R.id.save_document_button).setOnClickListener(view -> saveDocument());
+        saveButton = findViewById(R.id.save_document_button);
+        if (saveButton != null) {
+            saveButton.setOnClickListener(view -> saveDocument());
+        }
 
         View uploadArea = findViewById(R.id.upload_area);
         if (uploadArea != null) {
@@ -474,6 +479,11 @@ public class AddDocumentActivity extends AppCompatActivity {
     private void saveDocument() {
         try {
             clearValidationErrors();
+
+            if (saveButton != null) {
+                saveButton.setEnabled(false);
+            }
+
             boolean hasError = false;
             if (selectedDocumentUri == null) {
                 Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
@@ -494,6 +504,9 @@ public class AddDocumentActivity extends AppCompatActivity {
             }
             if (hasError) {
                 Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
+                if (saveButton != null) {
+                    saveButton.setEnabled(true);
+                }
                 return;
             }
 
@@ -538,7 +551,10 @@ public class AddDocumentActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT
                 ).show();
                 if (localSaved) {
+                    setResult(RESULT_OK);
                     finish();
+                } else if (saveButton != null) {
+                    saveButton.setEnabled(true);
                 }
                 return;
             }
@@ -549,13 +565,14 @@ public class AddDocumentActivity extends AppCompatActivity {
                     .collection(FIRESTORE_DOCUMENTS_COLLECTION)
                     .document(String.valueOf(documentId))
                     .set(docData, SetOptions.merge())
-                    .addOnSuccessListener(unused -> {
+                    .addOnSuccessListener(this, unused -> {
                         // Keep local cache for quick local reads and offline fallback.
                         saveDocumentLocally(documentId, docData);
                         Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         finish();
                     })
-                    .addOnFailureListener(e -> {
+                    .addOnFailureListener(this, e -> {
                         boolean localSaved = saveDocumentLocally(documentId, docData);
                         android.util.Log.e("AddDocumentActivity", "Cloud save failed", e);
                         Toast.makeText(
@@ -564,12 +581,18 @@ public class AddDocumentActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT
                         ).show();
                         if (localSaved) {
+                            setResult(RESULT_OK);
                             finish();
+                        } else if (saveButton != null) {
+                            saveButton.setEnabled(true);
                         }
                     });
         } catch (Exception e) {
             android.util.Log.e("AddDocumentActivity", "Save failed", e);
             Toast.makeText(this, getString(R.string.error_unable_to_save), Toast.LENGTH_SHORT).show();
+            if (saveButton != null) {
+                saveButton.setEnabled(true);
+            }
         }
     }
 
@@ -615,7 +638,9 @@ public class AddDocumentActivity extends AppCompatActivity {
             String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
             JSONArray docs = new JSONArray(raw);
             docs.put(doc);
-            return prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).commit();
+            // Prefer apply() (async) to avoid rare commit() failures blocking navigation.
+            prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).apply();
+            return true;
         } catch (JSONException e) {
             return false;
         }
