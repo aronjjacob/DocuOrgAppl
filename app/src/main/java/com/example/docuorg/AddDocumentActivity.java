@@ -92,9 +92,6 @@ public class AddDocumentActivity extends AppCompatActivity {
     private Chip addTagChip;
 
     private Long selectedDateMillis;
-    private TextView amountValue;
-    private TextView storeNameValue;
-    private com.google.android.material.chip.ChipGroup tagsGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +99,7 @@ public class AddDocumentActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_add_document);
 
+        // Initialize views
         selectedFileLabel = findViewById(R.id.selected_file_label);
         selectedFilePreview = findViewById(R.id.selected_file_preview);
 
@@ -118,6 +116,7 @@ public class AddDocumentActivity extends AppCompatActivity {
         tagsGroup = findViewById(R.id.tags_group);
         addTagChip = findViewById(R.id.tag_add);
 
+        // Register activity result launchers
         openDocumentLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
                 this::onDocumentPicked
@@ -129,75 +128,43 @@ public class AddDocumentActivity extends AppCompatActivity {
                     if (success != null && success) {
                         onCameraImageCaptured();
                     } else {
-                        // Capture cancelled/failed; clear pending URI.
                         pendingCameraUri = null;
                         pendingCameraDisplayName = null;
                     }
                 }
         );
 
+        // Set up click listeners
         findViewById(R.id.add_document_back).setOnClickListener(view -> finish());
         findViewById(R.id.cancel_button).setOnClickListener(view -> finish());
         findViewById(R.id.save_document_button).setOnClickListener(view -> saveDocument());
-        try {
-            selectedFileLabel = findViewById(R.id.selected_file_label);
-            selectedFilePreview = findViewById(R.id.selected_file_preview);
-            amountValue = findViewById(R.id.amount_value);
-            storeNameValue = findViewById(R.id.store_name_value);
-            tagsGroup = findViewById(R.id.tags_group);
 
-            applyScanExtras(getIntent());
+        View uploadArea = findViewById(R.id.upload_area);
+        if (uploadArea != null) {
+            uploadArea.setOnClickListener(v -> launchGalleryPicker());
+        }
 
-            openDocumentLauncher = registerForActivityResult(
-                    new ActivityResultContracts.OpenDocument(),
-                    this::onDocumentPicked
-            );
+        findViewById(R.id.gallery_button).setOnClickListener(view -> launchGalleryPicker());
+        findViewById(R.id.camera_button).setOnClickListener(view -> launchCameraCapture());
 
-            takePictureLauncher = registerForActivityResult(
-                    new ActivityResultContracts.TakePicture(),
-                    success -> {
-                        if (success != null && success) {
-                            onCameraImageCaptured();
-                        } else {
-                            // Capture cancelled/failed; clear pending URI.
-                            pendingCameraUri = null;
-                            pendingCameraDisplayName = null;
-                        }
-                    }
-            );
+        // Apply extras from AI scan if available
+        applyScanExtras(getIntent());
 
-            findViewById(R.id.add_document_back).setOnClickListener(view -> finish());
-            findViewById(R.id.cancel_button).setOnClickListener(view -> finish());
-            findViewById(R.id.save_document_button).setOnClickListener(
-                    view -> Toast.makeText(this, R.string.save_document, Toast.LENGTH_SHORT).show());
-
+        // Set up UI components
         setupCategoryDropdown();
         setupDatePicker();
         setupTagsUi();
 
+        // Restore state if available
         if (savedInstanceState != null) {
             String restoredUri = savedInstanceState.getString(STATE_SELECTED_URI);
             if (restoredUri != null) {
                 onDocumentPicked(Uri.parse(restoredUri));
-            View uploadArea = findViewById(R.id.upload_area);
-            if (uploadArea != null) {
-                uploadArea.setOnClickListener(v -> launchGalleryPicker());
             }
 
-            findViewById(R.id.gallery_button).setOnClickListener(view -> launchGalleryPicker());
-            findViewById(R.id.camera_button).setOnClickListener(view -> launchCameraCapture());
-
-            if (savedInstanceState != null) {
-                String restoredUri = savedInstanceState.getString(STATE_SELECTED_URI);
-                if (restoredUri != null) {
-                    onDocumentPicked(Uri.parse(restoredUri));
-                }
-
-                String cameraPendingUri = savedInstanceState.getString(STATE_CAMERA_PENDING_URI);
-                if (cameraPendingUri != null) {
-                    pendingCameraUri = Uri.parse(cameraPendingUri);
-                }
-                pendingCameraDisplayName = savedInstanceState.getString(STATE_CAMERA_PENDING_NAME);
+            String cameraPendingUri = savedInstanceState.getString(STATE_CAMERA_PENDING_URI);
+            if (cameraPendingUri != null) {
+                pendingCameraUri = Uri.parse(cameraPendingUri);
             }
             pendingCameraDisplayName = savedInstanceState.getString(STATE_CAMERA_PENDING_NAME);
 
@@ -205,27 +172,24 @@ public class AddDocumentActivity extends AppCompatActivity {
                 long restoredDate = savedInstanceState.getLong(STATE_SELECTED_DATE_MILLIS, -1);
                 if (restoredDate > 0) {
                     selectedDateMillis = restoredDate;
-                    dateInput.setText(formatDate(restoredDate));
+                    if (dateInput != null) {
+                        dateInput.setText(formatDate(restoredDate));
+                    }
                 }
             }
         }
 
-        // Receipt details are optional, and generally only relevant for receipt-like docs.
+        // Receipt details are optional
         if (receiptDetailsCard != null) {
             receiptDetailsCard.setVisibility(View.GONE);
         }
 
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.add_document_root), (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-                return insets;
-            });
-        } catch (Exception e) {
-            // Log error and finish activity to prevent crash
-            android.util.Log.e("AddDocumentActivity", "Error initializing activity", e);
-            Toast.makeText(this, "Error loading document form", Toast.LENGTH_SHORT).show();
-            finish();
-        }
+        // Apply window insets
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.add_document_root), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
     }
 
     @Override
@@ -607,13 +571,13 @@ public class AddDocumentActivity extends AppCompatActivity {
             }
 
             String amount = intent.getStringExtra(EXTRA_AMOUNT);
-            if (amount != null && amountValue != null) {
-                amountValue.setText(amount.isEmpty() ? getString(R.string.amount_value) : "$ " + amount);
+            if (amount != null && amountInput != null) {
+                amountInput.setText(amount.isEmpty() ? "" : amount);
             }
 
             String storeName = intent.getStringExtra(EXTRA_STORE_NAME);
-            if (storeName != null && storeNameValue != null) {
-                storeNameValue.setText(storeName.isEmpty() ? getString(R.string.store_name_hint) : storeName);
+            if (storeName != null && storeNameInput != null) {
+                storeNameInput.setText(storeName.isEmpty() ? "" : storeName);
             }
 
             String notes = intent.getStringExtra(EXTRA_NOTES);
@@ -623,18 +587,26 @@ public class AddDocumentActivity extends AppCompatActivity {
 
             String[] tags = intent.getStringArrayExtra(EXTRA_TAGS);
             if (tags != null && tagsGroup != null) {
+                // Remove all views except the add tag chip
+                int addTagIndex = -1;
+                for (int i = 0; i < tagsGroup.getChildCount(); i++) {
+                    if (tagsGroup.getChildAt(i) == addTagChip) {
+                        addTagIndex = i;
+                        break;
+                    }
+                }
                 tagsGroup.removeAllViews();
+
                 for (String tag : tags) {
                     if (tag == null || tag.trim().isEmpty()) {
                         continue;
                     }
-                    com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(this);
-                    chip.setText(tag.trim());
-                    chip.setChipBackgroundColorResource(R.color.chip_bg);
-                    chip.setTextColor(getColor(R.color.primary_teal));
-                    chip.setCloseIconVisible(true);
-                    chip.setCloseIconTintResource(R.color.primary_teal);
-                    tagsGroup.addView(chip);
+                    addTagChip(tag.trim());
+                }
+
+                // Re-add the add tag chip at the end
+                if (addTagChip != null) {
+                    tagsGroup.addView(addTagChip);
                 }
             }
         } catch (Exception e) {
