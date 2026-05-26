@@ -84,7 +84,7 @@
     <string name="tag_travel">Travel</string>
     <string name="add_tag">+ Add Tag</string>
     <string name="notes_label">Notes</string>
-    <string name="notes_hint">Add any additional details or context about this document...</string>
+    <string name="notes_hint">Add any additional details or context about this document…</string>
     <string name="save_document">Save Document</string>
     <string name="cancel">Cancel</string>
     <string name="automated_extraction_title">Automated Extraction</string>
@@ -124,4 +124,14 @@
     <string name="doc_date_sep_30">Sep 30</string>
     <string name="doc_date_sep_24">Sep 24</string>
     <string name="doc_date_sep_12">Sep 12</string>
+
+    <!-- Add Document interactions -->
+    <string name="add_tag_dialog_title">Add tag</string>
+    <string name="add_tag_dialog_hint">Tag name</string>
+    <string name="action_add">Add</string>
+    <string name="error_tag_empty">Please enter a tag name</string>
+    <string name="error_missing_required">Please select a file and fill in Title, Category, and Date</string>
+    <string name="document_saved">Document saved</string>
+    <string name="error_file_too_large">File too large (max 10MB)</string>
+    <string name="error_unable_to_save">Unable to save</string>
 </resources>

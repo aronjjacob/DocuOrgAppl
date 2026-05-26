@@ -1,12 +1,20 @@
 package com.example.docuorg;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,9 +25,22 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +53,11 @@ public class AddDocumentActivity extends AppCompatActivity {
     private static final String STATE_SELECTED_URI = "selected_uri";
     private static final String STATE_CAMERA_PENDING_URI = "camera_pending_uri";
     private static final String STATE_CAMERA_PENDING_NAME = "camera_pending_name";
+    private static final String STATE_SELECTED_DATE_MILLIS = "selected_date_millis";
+
+    private static final String PREFS_NAME = "docuorg_prefs";
+    private static final String PREFS_DOCUMENTS_JSON = "documents_json";
+    private static final long MAX_FILE_BYTES = 10L * 1024L * 1024L;
 
     private ActivityResultLauncher<String[]> openDocumentLauncher;
     private ActivityResultLauncher<Uri> takePictureLauncher;
@@ -43,6 +69,21 @@ public class AddDocumentActivity extends AppCompatActivity {
     private Uri pendingCameraUri;
     private String pendingCameraDisplayName;
 
+    private TextInputEditText titleInput;
+    private AutoCompleteTextView categoryInput;
+    private TextInputLayout dateInputLayout;
+    private TextInputEditText dateInput;
+    private TextInputEditText notesInput;
+
+    private MaterialCardView receiptDetailsCard;
+    private TextInputEditText amountInput;
+    private TextInputEditText storeNameInput;
+
+    private ChipGroup tagsGroup;
+    private Chip addTagChip;
+
+    private Long selectedDateMillis;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +92,19 @@ public class AddDocumentActivity extends AppCompatActivity {
 
         selectedFileLabel = findViewById(R.id.selected_file_label);
         selectedFilePreview = findViewById(R.id.selected_file_preview);
+
+        titleInput = findViewById(R.id.title_input);
+        categoryInput = findViewById(R.id.category_input);
+        dateInputLayout = findViewById(R.id.date_input_layout);
+        dateInput = findViewById(R.id.date_input);
+        notesInput = findViewById(R.id.notes_input);
+
+        receiptDetailsCard = findViewById(R.id.receipt_details_card);
+        amountInput = findViewById(R.id.amount_input);
+        storeNameInput = findViewById(R.id.store_name_input);
+
+        tagsGroup = findViewById(R.id.tags_group);
+        addTagChip = findViewById(R.id.tag_add);
 
         openDocumentLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
@@ -72,8 +126,7 @@ public class AddDocumentActivity extends AppCompatActivity {
 
         findViewById(R.id.add_document_back).setOnClickListener(view -> finish());
         findViewById(R.id.cancel_button).setOnClickListener(view -> finish());
-        findViewById(R.id.save_document_button).setOnClickListener(
-                view -> Toast.makeText(this, R.string.save_document, Toast.LENGTH_SHORT).show());
+        findViewById(R.id.save_document_button).setOnClickListener(view -> saveDocument());
 
         View uploadArea = findViewById(R.id.upload_area);
         if (uploadArea != null) {
@@ -82,6 +135,10 @@ public class AddDocumentActivity extends AppCompatActivity {
 
         findViewById(R.id.gallery_button).setOnClickListener(view -> launchGalleryPicker());
         findViewById(R.id.camera_button).setOnClickListener(view -> launchCameraCapture());
+
+        setupCategoryDropdown();
+        setupDatePicker();
+        setupTagsUi();
 
         if (savedInstanceState != null) {
             String restoredUri = savedInstanceState.getString(STATE_SELECTED_URI);
@@ -94,6 +151,19 @@ public class AddDocumentActivity extends AppCompatActivity {
                 pendingCameraUri = Uri.parse(cameraPendingUri);
             }
             pendingCameraDisplayName = savedInstanceState.getString(STATE_CAMERA_PENDING_NAME);
+
+            if (savedInstanceState.containsKey(STATE_SELECTED_DATE_MILLIS)) {
+                long restoredDate = savedInstanceState.getLong(STATE_SELECTED_DATE_MILLIS, -1);
+                if (restoredDate > 0) {
+                    selectedDateMillis = restoredDate;
+                    dateInput.setText(formatDate(restoredDate));
+                }
+            }
+        }
+
+        // Receipt details are optional, and generally only relevant for receipt-like docs.
+        if (receiptDetailsCard != null) {
+            receiptDetailsCard.setVisibility(View.GONE);
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.add_document_root), (v, insets) -> {
@@ -115,6 +185,172 @@ public class AddDocumentActivity extends AppCompatActivity {
         if (pendingCameraDisplayName != null) {
             outState.putString(STATE_CAMERA_PENDING_NAME, pendingCameraDisplayName);
         }
+        if (selectedDateMillis != null) {
+            outState.putLong(STATE_SELECTED_DATE_MILLIS, selectedDateMillis);
+        }
+    }
+
+    private void setupCategoryDropdown() {
+        if (categoryInput == null) {
+            return;
+        }
+
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.document_categories,
+                android.R.layout.simple_list_item_1
+        );
+        categoryInput.setAdapter(adapter);
+
+        categoryInput.setOnItemClickListener((parent, view, position, id) -> {
+            String selected = String.valueOf(parent.getItemAtPosition(position));
+            updateReceiptDetailsVisibility(selected);
+        });
+
+        categoryInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                updateReceiptDetailsVisibility(s != null ? s.toString() : null);
+            }
+        });
+
+        categoryInput.setOnClickListener(v -> categoryInput.showDropDown());
+    }
+
+    private void updateReceiptDetailsVisibility(String category) {
+        if (receiptDetailsCard == null) {
+            return;
+        }
+
+        boolean show = !TextUtils.isEmpty(category)
+                && category.equalsIgnoreCase(getString(R.string.doc_type_receipt));
+        receiptDetailsCard.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    private void setupDatePicker() {
+        if (dateInput == null) {
+            return;
+        }
+
+        // Prevent keyboard from showing; date is selected via picker.
+        dateInput.setKeyListener(null);
+
+        MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText(R.string.date_label)
+                .build();
+
+        picker.addOnPositiveButtonClickListener(selection -> {
+            selectedDateMillis = selection;
+            dateInput.setText(formatDate(selection));
+        });
+
+        View.OnClickListener openPicker = v -> {
+            if (!picker.isAdded()) {
+                picker.show(getSupportFragmentManager(), "date_picker");
+            }
+        };
+
+        dateInput.setOnClickListener(openPicker);
+        if (dateInputLayout != null) {
+            dateInputLayout.setEndIconOnClickListener(openPicker);
+        }
+    }
+
+    private String formatDate(long utcMillis) {
+        // MaterialDatePicker returns UTC millis; format in the user's locale/timezone.
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+        return formatter.format(new Date(utcMillis));
+    }
+
+    private void setupTagsUi() {
+        if (tagsGroup == null) {
+            return;
+        }
+
+        // Existing chips with close icons should remove themselves.
+        for (int i = 0; i < tagsGroup.getChildCount(); i++) {
+            View child = tagsGroup.getChildAt(i);
+            if (child instanceof Chip) {
+                Chip chip = (Chip) child;
+                if (chip.getId() != R.id.tag_add && chip.isCloseIconVisible()) {
+                    chip.setOnCloseIconClickListener(v -> tagsGroup.removeView(chip));
+                }
+            }
+        }
+
+        if (addTagChip != null) {
+            addTagChip.setOnClickListener(v -> showAddTagDialog());
+        }
+    }
+
+    private void showAddTagDialog() {
+        EditText input = new EditText(this);
+        input.setHint(R.string.add_tag_dialog_hint);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.add_tag_dialog_title)
+                .setView(input)
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .setPositiveButton(R.string.action_add, (dialog, which) -> {
+                    String tag = input.getText() != null ? input.getText().toString().trim() : "";
+                    if (TextUtils.isEmpty(tag)) {
+                        Toast.makeText(this, R.string.error_tag_empty, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    addTagChip(tag);
+                })
+                .show();
+    }
+
+    private void addTagChip(String tagText) {
+        if (tagsGroup == null) {
+            return;
+        }
+
+        Chip chip = new Chip(this);
+        chip.setText(tagText);
+        chip.setCloseIconVisible(true);
+        chip.setOnCloseIconClickListener(v -> tagsGroup.removeView(chip));
+        // Mirror the styling of existing chips.
+        chip.setTextColor(ContextCompat.getColor(this, R.color.primary_teal));
+        chip.setChipBackgroundColorResource(R.color.chip_bg);
+        chip.setCloseIconTintResource(R.color.primary_teal);
+
+        int insertIndex = addTagChip != null ? tagsGroup.indexOfChild(addTagChip) : -1;
+        if (insertIndex >= 0) {
+            tagsGroup.addView(chip, insertIndex);
+        } else {
+            tagsGroup.addView(chip);
+        }
+    }
+
+    private JSONArray collectTags() {
+        JSONArray tags = new JSONArray();
+        if (tagsGroup == null) {
+            return tags;
+        }
+        for (int i = 0; i < tagsGroup.getChildCount(); i++) {
+            View child = tagsGroup.getChildAt(i);
+            if (child instanceof Chip) {
+                Chip chip = (Chip) child;
+                if (chip.getId() == R.id.tag_add) {
+                    continue;
+                }
+                CharSequence text = chip.getText();
+                if (!TextUtils.isEmpty(text)) {
+                    tags.put(text.toString());
+                }
+            }
+        }
+        return tags;
     }
 
     private void launchGalleryPicker() {
@@ -165,6 +401,12 @@ public class AddDocumentActivity extends AppCompatActivity {
             return;
         }
 
+        Long size = getFileSizeBytes(uri);
+        if (size != null && size > MAX_FILE_BYTES) {
+            Toast.makeText(this, R.string.error_file_too_large, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         selectedDocumentUri = uri;
 
         try {
@@ -177,6 +419,79 @@ public class AddDocumentActivity extends AppCompatActivity {
         }
 
         updateSelectedFileUi(uri, null);
+    }
+
+    private Long getFileSizeBytes(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) {
+                    return cursor.getLong(sizeIndex);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private void saveDocument() {
+        String title = titleInput != null && titleInput.getText() != null
+                ? titleInput.getText().toString().trim()
+                : "";
+        String category = categoryInput != null ? categoryInput.getText().toString().trim() : "";
+        String dateText = dateInput != null && dateInput.getText() != null
+                ? dateInput.getText().toString().trim()
+                : "";
+
+        if (selectedDocumentUri == null || TextUtils.isEmpty(title) || TextUtils.isEmpty(category) || TextUtils.isEmpty(dateText)) {
+            Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        updateReceiptDetailsVisibility(category);
+
+        String notes = notesInput != null && notesInput.getText() != null
+                ? notesInput.getText().toString().trim()
+                : "";
+        String amount = amountInput != null && amountInput.getText() != null
+                ? amountInput.getText().toString().trim()
+                : "";
+        String storeName = storeNameInput != null && storeNameInput.getText() != null
+                ? storeNameInput.getText().toString().trim()
+                : "";
+
+        try {
+            JSONObject doc = new JSONObject();
+            doc.put("id", System.currentTimeMillis());
+            doc.put("uri", selectedDocumentUri.toString());
+            doc.put("displayName", getDisplayName(selectedDocumentUri));
+            doc.put("mime", getContentResolver().getType(selectedDocumentUri));
+            doc.put("title", title);
+            doc.put("category", category);
+            doc.put("dateText", dateText);
+            if (selectedDateMillis != null) {
+                doc.put("dateMillis", selectedDateMillis);
+            }
+            doc.put("notes", notes);
+            doc.put("tags", collectTags());
+
+            // Optional receipt metadata.
+            if (category.equalsIgnoreCase(getString(R.string.doc_type_receipt))) {
+                doc.put("amount", amount);
+                doc.put("storeName", storeName);
+            }
+
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
+            JSONArray docs = new JSONArray(raw);
+            docs.put(doc);
+            prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).apply();
+
+            Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
+            finish();
+        } catch (JSONException e) {
+            Toast.makeText(this, R.string.error_unable_to_save, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateSelectedFileUi(Uri uri, String displayNameOverride) {
