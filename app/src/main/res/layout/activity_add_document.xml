@@ -187,7 +187,6 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
-                app:expandedHintEnabled="false"
                 app:placeholderText="@string/document_title_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -211,7 +210,6 @@
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
                 app:endIconMode="dropdown_menu"
-                app:expandedHintEnabled="false"
                 app:placeholderText="@string/category_hint">
 
                 <AutoCompleteTextView
@@ -234,7 +232,6 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
-                app:expandedHintEnabled="false"
                 app:placeholderText="@string/date_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -392,7 +389,6 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="@color/field_stroke"
-                app:expandedHintEnabled="false"
                 app:placeholderText="@string/notes_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
