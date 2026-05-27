@@ -1,10 +1,10 @@
 package com.example.docuorg;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,16 +23,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
-import org.json.JSONArray;
-
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class DocumentsActivity extends AppCompatActivity {
-
-    private static final String PREFS_NAME = "docuorg_prefs";
-    private static final String PREFS_DOCUMENTS_JSON = "documents_json";
 
     private static final String FIRESTORE_USERS_COLLECTION = "users";
     private static final String FIRESTORE_DOCUMENTS_COLLECTION = "documents";
@@ -70,8 +64,15 @@ public class DocumentsActivity extends AppCompatActivity {
         emptyView = findViewById(R.id.documents_empty);
 
         adapter = new DocumentsAdapter(item -> {
-            // Keep behavior simple for now; ViewDocumentActivity is still mostly static.
             Intent intent = new Intent(this, ViewDocumentActivity.class);
+            intent.putExtra(ViewDocumentActivity.EXTRA_DOCUMENT_ID, item.id);
+            // Preload some fields so the View screen appears instantly and
+            // is robust if local JSON is temporarily missing or corrupted.
+            if (item.uri != null) intent.putExtra("extra_preload_uri", item.uri);
+            if (item.title != null) intent.putExtra("extra_preload_title", item.title);
+            if (item.category != null) intent.putExtra("extra_preload_category", item.category);
+            if (item.dateText != null) intent.putExtra("extra_preload_date", item.dateText);
+            if (item.dateMillis != null) intent.putExtra("extra_preload_date_millis", item.dateMillis);
             startActivity(intent);
         });
 
@@ -117,11 +118,7 @@ public class DocumentsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // If user is signed out (local mode), reload in case AddDocumentActivity added items.
-        FirebaseUser user = auth != null ? auth.getCurrentUser() : null;
-        if (user == null) {
-            loadLocalDocuments();
-        }
+        refreshDataSource();
     }
 
     private void setupFilters() {
@@ -190,7 +187,9 @@ public class DocumentsActivity extends AppCompatActivity {
         FirebaseUser user = auth != null ? auth.getCurrentUser() : null;
         if (user == null) {
             stopFirestoreListener();
-            loadLocalDocuments();
+            allDocuments.clear();
+            applyFilterAndRender();
+            showFirebaseLoginRequired();
             return;
         }
         startFirestoreListener(user.getUid());
@@ -206,8 +205,10 @@ public class DocumentsActivity extends AppCompatActivity {
 
         documentsRegistration = query.addSnapshotListener(this, (snapshot, e) -> {
             if (e != null) {
-                // Fall back to local if Firestore fails.
-                loadLocalDocuments();
+                android.util.Log.e("DocumentsActivity", "✗ Firestore listener FAILED", e);
+                if (allDocuments.isEmpty()) {
+                    Toast.makeText(this, R.string.error_unable_to_load, Toast.LENGTH_SHORT).show();
+                }
                 return;
             }
             allDocuments.clear();
@@ -219,8 +220,20 @@ public class DocumentsActivity extends AppCompatActivity {
                     }
                 }
             }
+            android.util.Log.i("DocumentsActivity", "✓ Loaded " + allDocuments.size() + " documents from Firestore");
             applyFilterAndRender();
         });
+    }
+
+    private void showFirebaseLoginRequired() {
+        if (emptyView != null) {
+            emptyView.setText(R.string.firebase_login_required);
+            emptyView.setVisibility(View.VISIBLE);
+        }
+        if (recyclerView != null) {
+            recyclerView.setVisibility(View.GONE);
+        }
+        Toast.makeText(this, R.string.firebase_login_required, Toast.LENGTH_SHORT).show();
     }
 
     private void stopFirestoreListener() {
@@ -230,21 +243,6 @@ public class DocumentsActivity extends AppCompatActivity {
         }
     }
 
-    private void loadLocalDocuments() {
-        try {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
-            JSONArray array = new JSONArray(raw);
-            List<DocumentItem> local = DocumentItem.fromJsonArray(array);
-            // Ensure newest-first (AddDocumentActivity appends, not inserts).
-            local.sort(Comparator.comparingLong((DocumentItem o) -> o.id).reversed());
-            allDocuments.clear();
-            allDocuments.addAll(local);
-        } catch (Exception ignored) {
-            allDocuments.clear();
-        }
-        applyFilterAndRender();
-    }
 
     private void applyFilterAndRender() {
         List<DocumentItem> filtered = new ArrayList<>();

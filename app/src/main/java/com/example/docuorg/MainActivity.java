@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
         // If already signed in, go straight to dashboard
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
+            // Log the signed-in user's UID to help troubleshoot Firestore writes
+            android.util.Log.i("MainActivity", "User already signed in: UID=" + currentUser.getUid());
             startActivity(new Intent(this, DashboardActivity.class));
             finish();
             return;
@@ -74,6 +76,12 @@ public class MainActivity extends AppCompatActivity {
                         loginButton.setText(getString(R.string.login_action));
                         if (task.isSuccessful()) {
                             // Sign in success
+                            FirebaseUser signedIn = mAuth.getCurrentUser();
+                            if (signedIn != null) {
+                                android.util.Log.i("MainActivity", "Sign-in successful: UID=" + signedIn.getUid());
+                            } else {
+                                android.util.Log.w("MainActivity", "Sign-in successful but no current user available");
+                            }
                             startActivity(new Intent(MainActivity.this, DashboardActivity.class));
                             finish();
                         } else {
