@@ -542,9 +542,11 @@ public class AddDocumentActivity extends AppCompatActivity {
             docData.put("title", titleInput.getText().toString());
             docData.put("category", categoryInput.getText().toString());
             docData.put("dateText", dateInput.getText().toString());
-            if (selectedDateMillis != null) {
-                docData.put("dateMillis", selectedDateMillis);
-            }
+            // Always save dateMillis (original creation date). Use user's selection or default to now.
+            long dateMillisToSave = selectedDateMillis != null ? selectedDateMillis : System.currentTimeMillis();
+            docData.put("dateMillis", dateMillisToSave);
+            // Always save modifiedDateMillis (updated every time document is saved, for analytics)
+            docData.put("modifiedDateMillis", System.currentTimeMillis());
             docData.put("notes", notes);
             docData.put("tags", tags);
 

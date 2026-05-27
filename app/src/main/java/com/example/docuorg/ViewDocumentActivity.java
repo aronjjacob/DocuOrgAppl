@@ -236,6 +236,11 @@ public class ViewDocumentActivity extends AppCompatActivity {
                 obj.put("dateMillis", ((Number) rawMillis).longValue());
             }
 
+            Object rawModifiedMillis = snapshot.get("modifiedDateMillis");
+            if (rawModifiedMillis instanceof Number) {
+                obj.put("modifiedDateMillis", ((Number) rawModifiedMillis).longValue());
+            }
+
             obj.put("notes", safeString(snapshot.getString("notes")));
 
             JSONArray tags = new JSONArray();

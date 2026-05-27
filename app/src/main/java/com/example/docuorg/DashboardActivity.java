@@ -253,13 +253,14 @@ public class DashboardActivity extends AppCompatActivity {
         int thisWeekCount = 0;
         int lastWeekCount = 0;
         for (DocumentItem item : recentDocuments) {
-            Long dateMillis = item.dateMillis;
-            if (dateMillis == null || dateMillis <= 0) {
+            // Use the latest timestamp: either original creation or modification date
+            Long relevantDate = item.modifiedDateMillis != null ? item.modifiedDateMillis : item.dateMillis;
+            if (relevantDate == null || relevantDate <= 0) {
                 continue;
             }
-            if (dateMillis >= startThisWeek) {
+            if (relevantDate >= startThisWeek) {
                 thisWeekCount++;
-            } else if (dateMillis >= startLastWeek) {
+            } else if (relevantDate >= startLastWeek) {
                 lastWeekCount++;
             }
         }
