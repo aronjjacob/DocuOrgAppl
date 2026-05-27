@@ -24,6 +24,7 @@ public final class DocumentItem {
     @Nullable public final String category;
     @Nullable public final String dateText;
     @Nullable public final Long dateMillis;
+    @Nullable public final Long modifiedDateMillis;
 
     public DocumentItem(
             long id,
@@ -35,6 +36,20 @@ public final class DocumentItem {
             @Nullable String dateText,
             @Nullable Long dateMillis
     ) {
+        this(id, uri, displayName, mime, title, category, dateText, dateMillis, null);
+    }
+
+    public DocumentItem(
+            long id,
+            @Nullable String uri,
+            @Nullable String displayName,
+            @Nullable String mime,
+            @Nullable String title,
+            @Nullable String category,
+            @Nullable String dateText,
+            @Nullable Long dateMillis,
+            @Nullable Long modifiedDateMillis
+    ) {
         this.id = id;
         this.uri = uri;
         this.displayName = displayName;
@@ -43,6 +58,7 @@ public final class DocumentItem {
         this.category = category;
         this.dateText = dateText;
         this.dateMillis = dateMillis;
+        this.modifiedDateMillis = modifiedDateMillis;
     }
 
     @NonNull
@@ -84,7 +100,13 @@ public final class DocumentItem {
             dateMillis = ((Number) rawDateMillis).longValue();
         }
 
-        return new DocumentItem(id, uri, displayName, mime, title, category, dateText, dateMillis);
+        Long modifiedDateMillis = null;
+        Object rawModifiedDateMillis = snapshot.get("modifiedDateMillis");
+        if (rawModifiedDateMillis instanceof Number) {
+            modifiedDateMillis = ((Number) rawModifiedDateMillis).longValue();
+        }
+
+        return new DocumentItem(id, uri, displayName, mime, title, category, dateText, dateMillis, modifiedDateMillis);
     }
 
     @Nullable
@@ -106,7 +128,15 @@ public final class DocumentItem {
                 }
             }
 
-            return new DocumentItem(id, uri, displayName, mime, title, category, dateText, dateMillis);
+            Long modifiedDateMillis = null;
+            if (obj.has("modifiedDateMillis")) {
+                long v = obj.optLong("modifiedDateMillis", -1);
+                if (v > 0) {
+                    modifiedDateMillis = v;
+                }
+            }
+
+            return new DocumentItem(id, uri, displayName, mime, title, category, dateText, dateMillis, modifiedDateMillis);
         } catch (Exception ignored) {
             return null;
         }
