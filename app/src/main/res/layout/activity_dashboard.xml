@@ -334,137 +334,24 @@
                     app:layout_constraintEnd_toEndOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <HorizontalScrollView
+            <TextView
+                android:id="@+id/recent_documents_empty"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/no_documents_yet"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recent_documents_carousel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/recent_card_tax"
-                        android:layout_width="180dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="12dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="@color/card_background"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="96dp"
-                                android:background="@drawable/bg_doc_thumb" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="12dp">
-
-                                <TextView
-                                    android:id="@+id/recent_card_tax_tag"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_chip"
-                                    android:paddingStart="8dp"
-                                    android:paddingEnd="8dp"
-                                    android:paddingTop="2dp"
-                                    android:paddingBottom="2dp"
-                                    android:text="@string/tag_pdf"
-                                    android:textColor="@color/primary_teal"
-                                    android:textSize="10sp" />
-
-                                <TextView
-                                    android:id="@+id/recent_card_tax_title"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="@string/document_title_tax"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="12sp" />
-
-                                <TextView
-                                    android:id="@+id/recent_card_tax_time"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:text="@string/document_time_tax"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="10sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/recent_card_secondary"
-                        android:layout_width="180dp"
-                        android:layout_height="wrap_content"
-                        app:cardBackgroundColor="@color/card_background"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="96dp"
-                                android:background="@drawable/bg_doc_thumb_alt" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="12dp">
-
-                                <TextView
-                                    android:id="@+id/recent_card_secondary_tag"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_chip"
-                                    android:paddingStart="8dp"
-                                    android:paddingEnd="8dp"
-                                    android:paddingTop="2dp"
-                                    android:paddingBottom="2dp"
-                                    android:text="@string/tag_docx"
-                                    android:textColor="@color/primary_teal"
-                                    android:textSize="10sp" />
-
-                                <TextView
-                                    android:id="@+id/recent_card_secondary_title"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="@string/document_title_passport"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="12sp" />
-
-                                <TextView
-                                    android:id="@+id/recent_card_secondary_time"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:text="@string/document_time_passport"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="10sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
-            </HorizontalScrollView>
+                android:orientation="horizontal"
+                android:scrollbars="none" />
         </LinearLayout>
     </ScrollView>
 
