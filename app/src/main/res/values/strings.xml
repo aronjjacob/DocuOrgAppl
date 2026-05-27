@@ -108,6 +108,8 @@
     <string name="filter_personal">Personal</string>
     <string name="recent_documents_title">Recent Documents</string>
     <string name="grid_view">Grid View</string>
+    <string name="no_documents_yet">No documents yet</string>
+    <string name="document_icon">Document icon</string>
     <string name="more_options">More options</string>
     <string name="doc_target_receipt">Target Receipt</string>
     <string name="doc_blood_test">Blood Test Results</string>
@@ -135,6 +137,11 @@
     <string name="document_saved">Document saved</string>
     <string name="error_file_too_large">File too large (max 10MB)</string>
     <string name="error_unable_to_save">Unable to save</string>
+    <string name="error_unable_to_load">Unable to load document</string>
+    <string name="firebase_login_required">Sign in to use Firebase documents.</string>
+    <string name="confirm_delete_document">Delete this document? This can’t be undone.</string>
+    <string name="error_unable_to_delete">Unable to delete document</string>
+    <string name="document_deleted">Document deleted</string>
     <string name="create_account">Create Account</string>
     <string name="create_account_body">Get started by creating a secure account.</string>
     <string name="confirm_password">Confirm Password</string>

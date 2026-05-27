@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <com.example.docuorg.ZoomImageView
+        android:id="@+id/fullscreen_zoom_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/document_icon"
+        android:adjustViewBounds="true"
+        android:scaleType="matrix" />
+
+    <ImageButton
+        android:id="@+id/fullscreen_close"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/back"
+        android:src="@drawable/ic_back"
+        android:tint="@color/white"
+        android:layout_gravity="top|end" />
+
+</FrameLayout>
+
+

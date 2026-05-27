@@ -98,12 +98,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <View
+                    <ImageView
                         android:id="@+id/document_preview_image"
                         android:layout_width="0dp"
                         android:layout_height="220dp"
                         android:layout_margin="12dp"
                         android:background="@drawable/bg_doc_preview"
+                        android:scaleType="centerCrop"
+                        android:adjustViewBounds="true"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -205,6 +207,7 @@
                                     app:tint="@color/primary_teal" />
 
                                 <TextView
+                                    android:id="@+id/document_category_value"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="6dp"
@@ -242,6 +245,7 @@
                                     app:tint="@color/primary_teal" />
 
                                 <TextView
+                                    android:id="@+id/document_date_value"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="6dp"
@@ -262,49 +266,11 @@
                         android:textSize="10sp" />
 
                     <LinearLayout
+                        android:id="@+id/document_tags_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_tag_pill"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:text="@string/tag_work"
-                            android:textColor="@color/primary_teal"
-                            android:textSize="10sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_tag_pill"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:text="@string/tag_2023"
-                            android:textColor="@color/primary_teal"
-                            android:textSize="10sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_tag_pill"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="2dp"
-                            android:paddingBottom="2dp"
-                            android:text="@string/tag_finance"
-                            android:textColor="@color/primary_teal"
-                            android:textSize="10sp" />
-                    </LinearLayout>
+                        android:orientation="horizontal" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/edit_document_button"

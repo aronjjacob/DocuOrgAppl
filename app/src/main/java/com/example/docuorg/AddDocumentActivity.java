@@ -1,8 +1,6 @@
 package com.example.docuorg;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,14 +35,11 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,9 +54,13 @@ import java.util.Map;
 public class AddDocumentActivity extends AppCompatActivity {
 
     public static final String EXTRA_IMAGE_URI = "extra_image_uri";
+    /** If set, the activity edits an existing document instead of creating a new one. */
+    public static final String EXTRA_DOCUMENT_ID = "extra_document_id";
     public static final String EXTRA_TITLE = "extra_title";
     public static final String EXTRA_CATEGORY = "extra_category";
     public static final String EXTRA_DATE = "extra_date";
+    /** Optional companion to {@link #EXTRA_DATE} to preserve the original millis value. */
+    public static final String EXTRA_DATE_MILLIS = "extra_date_millis";
     public static final String EXTRA_AMOUNT = "extra_amount";
     public static final String EXTRA_STORE_NAME = "extra_store_name";
     public static final String EXTRA_NOTES = "extra_notes";
@@ -71,9 +70,8 @@ public class AddDocumentActivity extends AppCompatActivity {
     private static final String STATE_CAMERA_PENDING_URI = "camera_pending_uri";
     private static final String STATE_CAMERA_PENDING_NAME = "camera_pending_name";
     private static final String STATE_SELECTED_DATE_MILLIS = "selected_date_millis";
+    private static final String STATE_EDITING_DOCUMENT_ID = "editing_document_id";
 
-    private static final String PREFS_NAME = "docuorg_prefs";
-    private static final String PREFS_DOCUMENTS_JSON = "documents_json";
     private static final long MAX_FILE_BYTES = 10L * 1024L * 1024L;
     private static final String FIRESTORE_USERS_COLLECTION = "users";
     private static final String FIRESTORE_DOCUMENTS_COLLECTION = "documents";
@@ -103,7 +101,10 @@ public class AddDocumentActivity extends AppCompatActivity {
     private ChipGroup tagsGroup;
     private Chip addTagChip;
 
+    private View saveButton;
+
     private Long selectedDateMillis;
+    private Long editingDocumentId;
     private FirebaseFirestore firestore;
     private FirebaseAuth auth;
 
@@ -155,7 +156,10 @@ public class AddDocumentActivity extends AppCompatActivity {
         // Set up click listeners
         findViewById(R.id.add_document_back).setOnClickListener(view -> finish());
         findViewById(R.id.cancel_button).setOnClickListener(view -> finish());
-        findViewById(R.id.save_document_button).setOnClickListener(view -> saveDocument());
+        saveButton = findViewById(R.id.save_document_button);
+        if (saveButton != null) {
+            saveButton.setOnClickListener(view -> saveDocument());
+        }
 
         View uploadArea = findViewById(R.id.upload_area);
         if (uploadArea != null) {
@@ -168,13 +172,14 @@ public class AddDocumentActivity extends AppCompatActivity {
         // Apply extras from AI scan if available
         applyScanExtras(getIntent());
 
-        // Set up UI components
-        setupCategoryDropdown();
-        setupDatePicker();
-        setupTagsUi();
-
         // Restore state if available
         if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(STATE_EDITING_DOCUMENT_ID)) {
+                long restoredEditId = savedInstanceState.getLong(STATE_EDITING_DOCUMENT_ID, -1);
+                if (restoredEditId > 0) {
+                    editingDocumentId = restoredEditId;
+                }
+            }
             String restoredUri = savedInstanceState.getString(STATE_SELECTED_URI);
             if (restoredUri != null) {
                 onDocumentPicked(Uri.parse(restoredUri));
@@ -202,6 +207,14 @@ public class AddDocumentActivity extends AppCompatActivity {
             receiptDetailsCard.setVisibility(View.GONE);
         }
 
+        // Wire up auxiliary UI behaviors
+        setupCategoryDropdown();
+        setupDatePicker();
+        setupTagsUi();
+
+        // If we're editing an existing document but the Intent didn't include
+        // full preload extras, try to populate fields from Firestore.
+        populateFromFirestoreIfNeeded();
         // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.add_document_root), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -213,6 +226,9 @@ public class AddDocumentActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (editingDocumentId != null) {
+            outState.putLong(STATE_EDITING_DOCUMENT_ID, editingDocumentId);
+        }
         if (selectedDocumentUri != null) {
             outState.putString(STATE_SELECTED_URI, selectedDocumentUri.toString());
         }
@@ -474,6 +490,11 @@ public class AddDocumentActivity extends AppCompatActivity {
     private void saveDocument() {
         try {
             clearValidationErrors();
+
+            if (saveButton != null) {
+                saveButton.setEnabled(false);
+            }
+
             boolean hasError = false;
             if (selectedDocumentUri == null) {
                 Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
@@ -494,6 +515,9 @@ public class AddDocumentActivity extends AppCompatActivity {
             }
             if (hasError) {
                 Toast.makeText(this, R.string.error_missing_required, Toast.LENGTH_SHORT).show();
+                if (saveButton != null) {
+                    saveButton.setEnabled(true);
+                }
                 return;
             }
 
@@ -503,7 +527,7 @@ public class AddDocumentActivity extends AppCompatActivity {
             String amount = getInputText(amountInput);
             String storeName = getInputText(storeNameInput);
 
-            long documentId = System.currentTimeMillis();
+            long documentId = editingDocumentId != null ? editingDocumentId : System.currentTimeMillis();
             List<String> tags = collectTags();
 
             Map<String, Object> docData = new HashMap<>();
@@ -531,14 +555,9 @@ public class AddDocumentActivity extends AppCompatActivity {
 
             FirebaseUser currentUser = auth.getCurrentUser();
             if (currentUser == null) {
-                boolean localSaved = saveDocumentLocally(documentId, docData);
-                Toast.makeText(
-                        this,
-                        localSaved ? "Saved locally. Sign in to sync to Firebase." : getString(R.string.error_unable_to_save),
-                        Toast.LENGTH_SHORT
-                ).show();
-                if (localSaved) {
-                    finish();
+                Toast.makeText(this, R.string.firebase_login_required, Toast.LENGTH_SHORT).show();
+                if (saveButton != null) {
+                    saveButton.setEnabled(true);
                 }
                 return;
             }
@@ -549,75 +568,25 @@ public class AddDocumentActivity extends AppCompatActivity {
                     .collection(FIRESTORE_DOCUMENTS_COLLECTION)
                     .document(String.valueOf(documentId))
                     .set(docData, SetOptions.merge())
-                    .addOnSuccessListener(unused -> {
-                        // Keep local cache for quick local reads and offline fallback.
-                        saveDocumentLocally(documentId, docData);
+                    .addOnSuccessListener(this, unused -> {
+                        android.util.Log.i("AddDocumentActivity", "✓ Document saved to Firestore: ID=" + documentId + ", User=" + userId);
                         Toast.makeText(this, R.string.document_saved, Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         finish();
                     })
-                    .addOnFailureListener(e -> {
-                        boolean localSaved = saveDocumentLocally(documentId, docData);
-                        android.util.Log.e("AddDocumentActivity", "Cloud save failed", e);
-                        Toast.makeText(
-                                this,
-                                localSaved ? "Cloud save failed. Saved locally instead." : getString(R.string.error_unable_to_save),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        if (localSaved) {
-                            finish();
+                    .addOnFailureListener(this, e -> {
+                        android.util.Log.e("AddDocumentActivity", "✗ Firestore save FAILED: ID=" + documentId, e);
+                        Toast.makeText(this, R.string.error_unable_to_save, Toast.LENGTH_SHORT).show();
+                        if (saveButton != null) {
+                            saveButton.setEnabled(true);
                         }
                     });
         } catch (Exception e) {
             android.util.Log.e("AddDocumentActivity", "Save failed", e);
             Toast.makeText(this, getString(R.string.error_unable_to_save), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean saveDocumentLocally(long documentId, Map<String, Object> docData) {
-        try {
-            JSONObject doc = new JSONObject();
-            doc.put("id", documentId);
-            doc.put("uri", valueAsString(docData.get("uri")));
-            doc.put("displayName", valueAsString(docData.get("displayName")));
-            doc.put("mime", valueAsString(docData.get("mime")));
-            doc.put("title", valueAsString(docData.get("title")));
-            doc.put("category", valueAsString(docData.get("category")));
-            doc.put("dateText", valueAsString(docData.get("dateText")));
-
-            Object dateMillis = docData.get("dateMillis");
-            if (dateMillis instanceof Long) {
-                doc.put("dateMillis", (Long) dateMillis);
+            if (saveButton != null) {
+                saveButton.setEnabled(true);
             }
-
-            doc.put("notes", valueAsString(docData.get("notes")));
-
-            JSONArray tagsArray = new JSONArray();
-            Object tagsValue = docData.get("tags");
-            if (tagsValue instanceof List<?>) {
-                for (Object tag : (List<?>) tagsValue) {
-                    if (tag != null) {
-                        tagsArray.put(String.valueOf(tag));
-                    }
-                }
-            }
-            doc.put("tags", tagsArray);
-
-            Object amount = docData.get("amount");
-            if (amount != null) {
-                doc.put("amount", String.valueOf(amount));
-            }
-            Object storeName = docData.get("storeName");
-            if (storeName != null) {
-                doc.put("storeName", String.valueOf(storeName));
-            }
-
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            String raw = prefs.getString(PREFS_DOCUMENTS_JSON, "[]");
-            JSONArray docs = new JSONArray(raw);
-            docs.put(doc);
-            return prefs.edit().putString(PREFS_DOCUMENTS_JSON, docs.toString()).commit();
-        } catch (JSONException e) {
-            return false;
         }
     }
 
@@ -626,10 +595,6 @@ public class AddDocumentActivity extends AppCompatActivity {
             return "";
         }
         return input.getText().toString().trim();
-    }
-
-    private String valueAsString(Object value) {
-        return value != null ? String.valueOf(value) : "";
     }
 
     private void updateSelectedFileUi(Uri uri, String displayNameOverride) {
@@ -669,6 +634,19 @@ public class AddDocumentActivity extends AppCompatActivity {
             return;
         }
         try {
+            // Edit mode extras
+            long editId = intent.getLongExtra(EXTRA_DOCUMENT_ID, -1);
+            if (editId > 0) {
+                editingDocumentId = editId;
+            }
+            long dateMillis = intent.getLongExtra(EXTRA_DATE_MILLIS, -1);
+            if (dateMillis > 0) {
+                selectedDateMillis = dateMillis;
+                if (dateInput != null && (dateInput.getText() == null || dateInput.getText().toString().trim().isEmpty())) {
+                    dateInput.setText(formatDate(dateMillis));
+                }
+            }
+
             String imageUri = intent.getStringExtra(EXTRA_IMAGE_URI);
             if (imageUri != null) {
                 onDocumentPicked(Uri.parse(imageUri));
@@ -734,6 +712,130 @@ public class AddDocumentActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             android.util.Log.w("AddDocumentActivity", "Could not set text for view " + viewId, e);
+        }
+    }
+
+    /**
+     * If we're editing an existing document but didn't receive full preload extras,
+     * try to load the document from Firestore and populate the UI fields so the
+     * user can edit.
+     */
+    private void populateFromFirestoreIfNeeded() {
+        try {
+            if (editingDocumentId == null || editingDocumentId <= 0) {
+                return;
+            }
+
+            // If key fields are already set (via extras), don't overwrite them.
+            boolean hasTitle = titleInput != null && titleInput.getText() != null && titleInput.getText().toString().trim().length() > 0;
+            boolean hasCategory = categoryInput != null && categoryInput.getText() != null && categoryInput.getText().toString().trim().length() > 0;
+            boolean hasDate = dateInput != null && dateInput.getText() != null && dateInput.getText().toString().trim().length() > 0;
+            boolean hasUri = selectedDocumentUri != null;
+            if (hasTitle && hasCategory && hasDate && hasUri) {
+                return; // nothing to populate
+            }
+
+            FirebaseUser currentUser = auth != null ? auth.getCurrentUser() : null;
+            if (currentUser == null) {
+                return;
+            }
+
+            firestore.collection(FIRESTORE_USERS_COLLECTION)
+                    .document(currentUser.getUid())
+                    .collection(FIRESTORE_DOCUMENTS_COLLECTION)
+                    .document(String.valueOf(editingDocumentId))
+                    .get()
+                    .addOnSuccessListener(this, snapshot -> applyFirestoreSnapshotToEditor(snapshot, hasUri, hasTitle, hasCategory, hasDate))
+                    .addOnFailureListener(this, e -> android.util.Log.w("AddDocumentActivity", "populateFromFirestoreIfNeeded failed", e));
+        } catch (Exception e) {
+            android.util.Log.w("AddDocumentActivity", "populateFromFirestoreIfNeeded failed", e);
+        }
+    }
+
+    private void applyFirestoreSnapshotToEditor(DocumentSnapshot snapshot,
+                                               boolean hasUri,
+                                               boolean hasTitle,
+                                               boolean hasCategory,
+                                               boolean hasDate) {
+        if (snapshot == null || !snapshot.exists()) {
+            return;
+        }
+
+        if (!hasUri) {
+            String uri = snapshot.getString("uri");
+            if (uri != null && !uri.trim().isEmpty()) {
+                try {
+                    selectedDocumentUri = Uri.parse(uri);
+                    updateSelectedFileUi(selectedDocumentUri, snapshot.getString("displayName"));
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (!hasTitle) {
+            String title = snapshot.getString("title");
+            if (title != null && !title.isEmpty()) {
+                setTextIfPresent(R.id.title_input, title);
+            }
+        }
+        if (!hasCategory) {
+            String category = snapshot.getString("category");
+            if (category != null && !category.isEmpty()) {
+                setTextIfPresent(R.id.category_input, category);
+                updateReceiptDetailsVisibility(category);
+            }
+        }
+        if (!hasDate) {
+            String date = snapshot.getString("dateText");
+            if (date != null && !date.isEmpty()) {
+                setTextIfPresent(R.id.date_input, date);
+            }
+            Object rawDateMillis = snapshot.get("dateMillis");
+            if (rawDateMillis instanceof Number) {
+                long millis = ((Number) rawDateMillis).longValue();
+                if (millis > 0) {
+                    selectedDateMillis = millis;
+                }
+            }
+        }
+
+        if (notesInput != null && (notesInput.getText() == null || notesInput.getText().toString().trim().isEmpty())) {
+            String notes = snapshot.getString("notes");
+            if (notes != null) {
+                setTextIfPresent(R.id.notes_input, notes);
+            }
+        }
+
+        if (amountInput != null && (amountInput.getText() == null || amountInput.getText().toString().trim().isEmpty())) {
+            String amount = snapshot.getString("amount");
+            if (amount != null) {
+                amountInput.setText(amount);
+            }
+        }
+
+        if (storeNameInput != null && (storeNameInput.getText() == null || storeNameInput.getText().toString().trim().isEmpty())) {
+            String storeName = snapshot.getString("storeName");
+            if (storeName != null) {
+                storeNameInput.setText(storeName);
+            }
+        }
+
+        if (tagsGroup != null) {
+            Object rawTags = snapshot.get("tags");
+            if (rawTags instanceof List<?> && tagsGroup.getChildCount() <= 1) {
+                tagsGroup.removeAllViews();
+                for (Object tag : (List<?>) rawTags) {
+                    if (tag != null) {
+                        String text = String.valueOf(tag).trim();
+                        if (!text.isEmpty()) {
+                            addTagChip(text);
+                        }
+                    }
+                }
+                if (addTagChip != null) {
+                    tagsGroup.addView(addTagChip);
+                }
+            }
         }
     }
 

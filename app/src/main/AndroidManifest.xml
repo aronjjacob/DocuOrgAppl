@@ -43,6 +43,10 @@
             android:name=".ViewDocumentActivity"
             android:exported="false" />
         <activity
+            android:name=".FullscreenPreviewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DocuOrg" />
+        <activity
             android:name=".DashboardActivity"
             android:exported="false" />
         <activity
