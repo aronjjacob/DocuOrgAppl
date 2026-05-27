@@ -105,6 +105,7 @@
     <string name="ai_upload_body">Drag &amp; drop images here, or tap to browse your local storage</string>
     <string name="ai_scan_action">Scan with AI</string>
     <string name="ai_recently_processed">Recently Processed</string>
+    <string name="ai_recent_empty">There\'s none</string>
     <string name="ai_recent_file_1">Receipt_Scan.jpg</string>
     <string name="ai_recent_status_1">Analyzed 2h ago</string>
     <string name="ai_recent_file_2">ID_Capture.png</string>

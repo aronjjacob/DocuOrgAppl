@@ -18,6 +18,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.FrameLayout;
 import android.view.View;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +47,13 @@ public class AiActivity extends AppCompatActivity {
     private final AiScanClient aiScanClient = new AiScanClient();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private FrameLayout scanningOverlay;
+    // Firestore for storing recently processed AI items
+    private FirebaseAuth auth;
+    private FirebaseFirestore firestore;
+    private ListenerRegistration aiProcessedRegistration;
+    private RecentProcessedAdapter aiProcessedAdapter;
+    private RecyclerView aiRecentRecycler;
+    private TextView aiRecentEmpty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +67,18 @@ public class AiActivity extends AppCompatActivity {
         TextView uploadTitle = findViewById(R.id.ai_upload_title);
         TextView uploadBody = findViewById(R.id.ai_upload_body);
         scanningOverlay = findViewById(R.id.ai_scanning_overlay);
+
+        // Recently processed list view and empty state
+        aiRecentEmpty = findViewById(R.id.ai_recent_empty);
+        aiRecentRecycler = findViewById(R.id.ai_recent_recycler);
+        aiProcessedAdapter = new RecentProcessedAdapter(this);
+        aiRecentRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        aiRecentRecycler.setAdapter(aiProcessedAdapter);
+
+        // Init Firebase
+        auth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        setupAiProcessedListener();
 
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
@@ -129,6 +159,30 @@ public class AiActivity extends AppCompatActivity {
             public void onSuccess(@NonNull AiScanClient.DocumentScanResult result) {
                 mainHandler.post(() -> {
                     scanningOverlay.setVisibility(View.GONE);
+                    // Persist a short summary of this processed item so the "Recently Processed" list updates
+                    FirebaseUser user = auth.getCurrentUser();
+                    if (user != null) {
+                        try {
+                            java.util.Map<String, Object> data = new java.util.HashMap<>();
+                            data.put("title", result.title != null ? result.title : "");
+                            data.put("category", result.category != null ? result.category : "");
+                            data.put("imageUri", uri != null ? uri.toString() : "");
+                            data.put("timestamp", System.currentTimeMillis());
+                            data.put("notes", result.notes != null ? result.notes : "");
+                            firestore.collection("users")
+                                    .document(user.getUid())
+                                    .collection("ai_processed")
+                                    .add(data);
+                            // also update local UI immediately so the list no longer shows the empty state
+                            ProcessedItem local = new ProcessedItem(result.title != null ? result.title : "", result.category != null ? result.category : "", uri != null ? uri.toString() : "", System.currentTimeMillis());
+                            aiRecentEmpty.setVisibility(View.GONE);
+                            aiRecentRecycler.setVisibility(View.VISIBLE);
+                            aiProcessedAdapter.addItem(local);
+                        } catch (Exception e) {
+                            // ignore persistence errors for now
+                        }
+                    }
+
                     openAddDocumentWithResult(uri, result);
                 });
             }
@@ -158,5 +212,55 @@ public class AiActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         // Finish this activity so the back stack is clean
         finish();
+    }
+
+    private void setupAiProcessedListener() {
+        if (auth == null || firestore == null) return;
+        if (auth.getCurrentUser() == null) {
+            // no user signed in; keep empty state
+            aiRecentEmpty.setVisibility(View.VISIBLE);
+            aiRecentRecycler.setVisibility(View.GONE);
+            return;
+        }
+        String uid = auth.getCurrentUser().getUid();
+        aiProcessedRegistration = firestore.collection("users")
+                .document(uid)
+                .collection("ai_processed")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .addSnapshotListener((QuerySnapshot snapshot, FirebaseFirestoreException e) -> {
+                    if (e != null) {
+                        // keep empty state on error
+                        aiRecentEmpty.setVisibility(View.VISIBLE);
+                        aiRecentRecycler.setVisibility(View.GONE);
+                        return;
+                    }
+                    java.util.List<ProcessedItem> items = new java.util.ArrayList<>();
+                    if (snapshot != null && !snapshot.isEmpty()) {
+                        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                            String title = doc.getString("title");
+                            String category = doc.getString("category");
+                            String imageUri = doc.getString("imageUri");
+                            Long ts = doc.getLong("timestamp");
+                            items.add(new ProcessedItem(title, category, imageUri, ts != null ? ts : 0L));
+                        }
+                    }
+                    if (items.isEmpty()) {
+                        aiRecentEmpty.setVisibility(View.VISIBLE);
+                        aiRecentRecycler.setVisibility(View.GONE);
+                    } else {
+                        aiRecentEmpty.setVisibility(View.GONE);
+                        aiRecentRecycler.setVisibility(View.VISIBLE);
+                        aiProcessedAdapter.submitList(items);
+                    }
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (aiProcessedRegistration != null) {
+            aiProcessedRegistration.remove();
+            aiProcessedRegistration = null;
+        }
     }
 }
