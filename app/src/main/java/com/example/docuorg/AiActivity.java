@@ -62,6 +62,15 @@ public class AiActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ai);
         BottomNavHelper.setupBottomNav(this, R.id.nav_ai_item);
 
+        View profileButton = findViewById(R.id.ai_profile);
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProfileInfoActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
+
         ImageView previewImage = findViewById(R.id.ai_preview_image);
         ImageView uploadIcon = findViewById(R.id.ai_upload_icon);
         TextView uploadTitle = findViewById(R.id.ai_upload_title);

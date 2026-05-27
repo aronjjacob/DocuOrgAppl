@@ -53,16 +53,6 @@
                     app:layout_constraintStart_toEndOf="@id/view_document_back"
                     app:layout_constraintTop_toTopOf="@id/view_document_back" />
 
-                <ImageView
-                    android:id="@+id/view_document_search"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:contentDescription="@string/search_content_description"
-                    android:src="@drawable/ic_search"
-                    app:tint="@color/primary_teal"
-                    app:layout_constraintBottom_toBottomOf="@id/view_document_back"
-                    app:layout_constraintEnd_toStartOf="@id/view_document_profile"
-                    app:layout_constraintTop_toTopOf="@id/view_document_back" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/view_document_profile"

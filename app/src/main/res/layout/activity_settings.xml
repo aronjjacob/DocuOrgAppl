@@ -31,6 +31,7 @@
             android:textSize="18sp" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/settings_profile_button"
             android:layout_width="32dp"
             android:layout_height="32dp"
             app:cardBackgroundColor="@color/card_background"
@@ -207,105 +208,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/settings_notifications_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:background="@drawable/bg_category_circle"
-                            android:contentDescription="@string/settings_notifications_title"
-                            android:padding="6dp"
-                            android:src="@drawable/ic_bell"
-                            app:tint="@color/primary_teal" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_notifications_title"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="@string/settings_notifications_subtitle"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:contentDescription="@string/more_options"
-                            android:src="@drawable/ic_chevron_right" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/field_stroke" />
-
-                    <LinearLayout
-                        android:id="@+id/settings_appearance_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:background="@drawable/bg_category_circle"
-                            android:contentDescription="@string/settings_appearance_title"
-                            android:padding="6dp"
-                            android:src="@drawable/ic_palette"
-                            app:tint="@color/primary_teal" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_appearance_title"
-                                android:textColor="@color/text_primary"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="@string/settings_appearance_subtitle"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/settings_dark_mode_toggle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="false" />
-                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -468,44 +370,6 @@
                                 android:textColor="@color/primary_teal"
                                 android:textSize="11sp" />
                         </com.google.android.material.card.MaterialCardView>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/field_stroke" />
-
-                    <LinearLayout
-                        android:id="@+id/settings_help_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:background="@drawable/bg_category_circle"
-                            android:contentDescription="@string/settings_help_title"
-                            android:padding="6dp"
-                            android:src="@drawable/ic_info"
-                            app:tint="@color/primary_teal" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:text="@string/settings_help_title"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:contentDescription="@string/more_options"
-                            android:src="@drawable/ic_chevron_right" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

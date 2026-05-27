@@ -18,29 +18,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/documents_search"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:contentDescription="@string/search_content_description"
-            android:src="@drawable/ic_search"
-            app:tint="@color/primary_teal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
         <TextView
             android:id="@+id/documents_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="0dp"
             android:fontFamily="sans-serif-medium"
             android:text="@string/app_name"
             android:textColor="@color/primary_teal"
             android:textSize="16sp"
-            app:layout_constraintStart_toEndOf="@id/documents_search"
-            app:layout_constraintTop_toTopOf="@id/documents_search"
-            app:layout_constraintBottom_toBottomOf="@id/documents_search" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <ImageView
             android:id="@+id/documents_filter"
@@ -182,16 +171,6 @@
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/grid_view_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/grid_view"
-                android:textColor="@color/primary_teal"
-                android:textSize="12sp"
-                app:layout_constraintBaseline_toBaselineOf="@id/recent_documents_title"
-                app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.recyclerview.widget.RecyclerView

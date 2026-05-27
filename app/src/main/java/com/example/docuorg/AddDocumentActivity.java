@@ -116,6 +116,15 @@ public class AddDocumentActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
+        View profileButton = findViewById(R.id.add_document_profile);
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProfileInfoActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
+
         // Initialize views
         selectedFileLabel = findViewById(R.id.selected_file_label);
         selectedFilePreview = findViewById(R.id.selected_file_preview);
@@ -169,7 +178,12 @@ public class AddDocumentActivity extends AppCompatActivity {
         findViewById(R.id.gallery_button).setOnClickListener(view -> launchGalleryPicker());
         findViewById(R.id.camera_button).setOnClickListener(view -> launchCameraCapture());
 
-        // Apply extras from AI scan if available
+        // Set up UI components
+        setupCategoryDropdown();
+        setupDatePicker();
+        setupTagsUi();
+
+        // Apply extras from AI scan after UI is ready
         applyScanExtras(getIntent());
 
         // Restore state if available
@@ -636,19 +650,6 @@ public class AddDocumentActivity extends AppCompatActivity {
             return;
         }
         try {
-            // Edit mode extras
-            long editId = intent.getLongExtra(EXTRA_DOCUMENT_ID, -1);
-            if (editId > 0) {
-                editingDocumentId = editId;
-            }
-            long dateMillis = intent.getLongExtra(EXTRA_DATE_MILLIS, -1);
-            if (dateMillis > 0) {
-                selectedDateMillis = dateMillis;
-                if (dateInput != null && (dateInput.getText() == null || dateInput.getText().toString().trim().isEmpty())) {
-                    dateInput.setText(formatDate(dateMillis));
-                }
-            }
-
             String imageUri = intent.getStringExtra(EXTRA_IMAGE_URI);
             if (imageUri != null) {
                 onDocumentPicked(Uri.parse(imageUri));
@@ -661,7 +662,10 @@ public class AddDocumentActivity extends AppCompatActivity {
 
             String category = intent.getStringExtra(EXTRA_CATEGORY);
             if (category != null && !category.isEmpty()) {
-                setTextIfPresent(R.id.category_input, category);
+                if (categoryInput != null) {
+                    categoryInput.setText(category, false);
+                    updateReceiptDetailsVisibility(category);
+                }
             }
 
             String date = intent.getStringExtra(EXTRA_DATE);

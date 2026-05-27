@@ -19,6 +19,35 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
         BottomNavHelper.setupBottomNav(this, R.id.nav_settings_item);
 
+        findViewById(R.id.settings_profile_button).setOnClickListener(v -> {
+            Intent intent = new Intent(this, ProfileInfoActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+
+        findViewById(R.id.settings_profile_row).setOnClickListener(v -> {
+            Intent intent = new Intent(this, ProfileInfoActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+
+        findViewById(R.id.settings_password_row).setOnClickListener(v -> {
+            Intent intent = new Intent(this, UpdatePasswordActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+
+        findViewById(R.id.settings_privacy_row).setOnClickListener(v -> {
+            Intent intent = new Intent(this, PrivacyPolicyActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+        findViewById(R.id.settings_terms_row).setOnClickListener(v -> {
+            Intent intent = new Intent(this, TermsOfServiceActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+
         findViewById(R.id.settings_logout_button).setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(this, MainActivity.class);
@@ -33,4 +62,6 @@ public class SettingsActivity extends AppCompatActivity {
             return insets;
         });
     }
+
+    // ...existing code...
 }

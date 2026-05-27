@@ -18,17 +18,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/ai_search"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:contentDescription="@string/search_content_description"
-            android:src="@drawable/ic_search"
-            app:tint="@color/primary_teal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
         <TextView
             android:id="@+id/ai_title"
             android:layout_width="wrap_content"
@@ -37,11 +26,12 @@
             android:text="@string/app_name"
             android:textColor="@color/primary_teal"
             android:textSize="16sp"
-            app:layout_constraintStart_toEndOf="@id/ai_search"
-            app:layout_constraintTop_toTopOf="@id/ai_search"
-            app:layout_constraintBottom_toBottomOf="@id/ai_search"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/ai_profile"
-            android:layout_marginStart="12dp" />
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.6" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/ai_profile"

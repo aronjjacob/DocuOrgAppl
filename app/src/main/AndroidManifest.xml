@@ -37,6 +37,18 @@
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity
+            android:name=".PrivacyPolicyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TermsOfServiceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".UpdatePasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".AiActivity"
             android:exported="false" />
         <activity

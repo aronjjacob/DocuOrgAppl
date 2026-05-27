@@ -59,6 +59,15 @@ public class DocumentsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_documents);
         BottomNavHelper.setupBottomNav(this, R.id.nav_documents_item);
 
+        View profileButton = findViewById(R.id.documents_profile);
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProfileInfoActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
+
         auth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
@@ -311,4 +320,3 @@ public class DocumentsActivity extends AppCompatActivity {
         }
     }
 }
-

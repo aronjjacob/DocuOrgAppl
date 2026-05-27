@@ -52,6 +52,15 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
         BottomNavHelper.setupBottomNav(this, R.id.nav_home_item);
 
+        View profileButton = findViewById(R.id.dashboard_profile_button);
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProfileInfoActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
+
         auth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
