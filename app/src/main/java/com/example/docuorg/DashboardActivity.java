@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -37,14 +39,9 @@ public class DashboardActivity extends AppCompatActivity {
     private TextView totalDocumentsValue;
     private TextView totalDocumentsDelta;
 
-    private View recentCardPrimary;
-    private View recentCardSecondary;
-    private TextView recentTagPrimary;
-    private TextView recentTitlePrimary;
-    private TextView recentTimePrimary;
-    private TextView recentTagSecondary;
-    private TextView recentTitleSecondary;
-    private TextView recentTimeSecondary;
+    private RecyclerView carouselView;
+    private TextView emptyView;
+    private RecentDocumentsAdapter carouselAdapter;
 
     private final List<DocumentItem> recentDocuments = new ArrayList<>();
 
@@ -62,19 +59,29 @@ public class DashboardActivity extends AppCompatActivity {
         totalDocumentsValue = findViewById(R.id.total_documents_value);
         totalDocumentsDelta = findViewById(R.id.total_documents_delta_value);
 
-        recentCardPrimary = findViewById(R.id.recent_card_tax);
-        recentCardSecondary = findViewById(R.id.recent_card_secondary);
-        recentTagPrimary = findViewById(R.id.recent_card_tax_tag);
-        recentTitlePrimary = findViewById(R.id.recent_card_tax_title);
-        recentTimePrimary = findViewById(R.id.recent_card_tax_time);
-        recentTagSecondary = findViewById(R.id.recent_card_secondary_tag);
-        recentTitleSecondary = findViewById(R.id.recent_card_secondary_title);
-        recentTimeSecondary = findViewById(R.id.recent_card_secondary_time);
+        carouselView = findViewById(R.id.recent_documents_carousel);
+        emptyView = findViewById(R.id.recent_documents_empty);
+
+        carouselAdapter = new RecentDocumentsAdapter(item -> {
+            Intent intent = new Intent(this, ViewDocumentActivity.class);
+            intent.putExtra(ViewDocumentActivity.EXTRA_DOCUMENT_ID, item.id);
+            if (item.uri != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_URI, item.uri);
+            if (item.title != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_TITLE, item.title);
+            if (item.category != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_CATEGORY, item.category);
+            if (item.dateText != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_DATE, item.dateText);
+            if (item.dateMillis != null) {
+                intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_DATE_MILLIS, item.dateMillis);
+            }
+            startActivity(intent);
+        });
+
+        if (carouselView != null) {
+            carouselView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+            carouselView.setAdapter(carouselAdapter);
+        }
 
         bindStaticActions();
         updateGreeting();
-        bindRecentCard(null, recentTagPrimary, recentTitlePrimary, recentTimePrimary, recentCardPrimary);
-        bindRecentCard(null, recentTagSecondary, recentTitleSecondary, recentTimeSecondary, recentCardSecondary);
 
         authStateListener = firebaseAuth -> {
             updateGreeting();
@@ -216,11 +223,17 @@ public class DashboardActivity extends AppCompatActivity {
             totalDocumentsDelta.setText(getWeekDeltaText());
         }
 
-        DocumentItem primary = count > 0 ? recentDocuments.get(0) : null;
-        DocumentItem secondary = count > 1 ? recentDocuments.get(1) : null;
+        if (carouselAdapter != null) {
+            carouselAdapter.submitList(recentDocuments);
+        }
 
-        bindRecentCard(primary, recentTagPrimary, recentTitlePrimary, recentTimePrimary, recentCardPrimary);
-        bindRecentCard(secondary, recentTagSecondary, recentTitleSecondary, recentTimeSecondary, recentCardSecondary);
+        boolean hasDocuments = !recentDocuments.isEmpty();
+        if (emptyView != null) {
+            emptyView.setVisibility(hasDocuments ? View.GONE : View.VISIBLE);
+        }
+        if (carouselView != null) {
+            carouselView.setVisibility(hasDocuments ? View.VISIBLE : View.GONE);
+        }
     }
 
     private String getWeekDeltaText() {
@@ -255,64 +268,5 @@ public class DashboardActivity extends AppCompatActivity {
         return getString(R.string.dashboard_week_delta_template, delta);
     }
 
-    private void bindRecentCard(
-            DocumentItem item,
-            TextView tagView,
-            TextView titleView,
-            TextView timeView,
-            View cardView
-    ) {
-        if (tagView != null) {
-            tagView.setText(item != null ? deriveTag(item) : getString(R.string.dashboard_recent_empty_tag));
-        }
-        if (titleView != null) {
-            titleView.setText(item != null ? item.bestTitle() : getString(R.string.dashboard_recent_empty_title));
-        }
-        if (timeView != null) {
-            timeView.setText(item != null ? deriveDateText(item) : getString(R.string.dashboard_recent_empty_time));
-        }
-        if (cardView != null) {
-            cardView.setOnClickListener(v -> {
-                if (item == null) {
-                    Toast.makeText(this, R.string.no_documents_yet, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Intent intent = new Intent(this, ViewDocumentActivity.class);
-                intent.putExtra(ViewDocumentActivity.EXTRA_DOCUMENT_ID, item.id);
-                if (item.uri != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_URI, item.uri);
-                if (item.title != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_TITLE, item.title);
-                if (item.category != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_CATEGORY, item.category);
-                if (item.dateText != null) intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_DATE, item.dateText);
-                if (item.dateMillis != null) {
-                    intent.putExtra(ViewDocumentActivity.EXTRA_PRELOAD_DATE_MILLIS, item.dateMillis);
-                }
-                startActivity(intent);
-            });
-        }
-    }
 
-    private String deriveDateText(DocumentItem item) {
-        String date = item.dateText;
-        if (date == null || date.trim().isEmpty()) {
-            return getString(R.string.dashboard_recent_date_unknown);
-        }
-        return getString(R.string.dashboard_recent_modified_template, date);
-    }
-
-    private String deriveTag(DocumentItem item) {
-        String mime = item.mime != null ? item.mime.toLowerCase(Locale.US) : "";
-        if (mime.contains("pdf")) {
-            return "PDF";
-        }
-        if (mime.contains("word") || mime.contains("doc")) {
-            return "DOC";
-        }
-        if (mime.contains("image")) {
-            return "IMG";
-        }
-        if (item.category != null && !item.category.trim().isEmpty()) {
-            return item.category.trim().toUpperCase(Locale.US);
-        }
-        return getString(R.string.dashboard_recent_empty_tag);
-    }
 }
