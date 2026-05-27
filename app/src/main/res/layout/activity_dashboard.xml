@@ -145,6 +145,7 @@
                             android:textSize="32sp" />
 
                         <TextView
+                            android:id="@+id/total_documents_delta_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
@@ -173,6 +174,7 @@
                 app:columnCount="3">
 
                 <LinearLayout
+                    android:id="@+id/category_tax_item"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
@@ -199,6 +201,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/category_medical_item"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
@@ -225,6 +228,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/category_receipts_item"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
@@ -251,6 +255,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/category_personal_item"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     app:layout_columnWeight="1"
@@ -276,6 +281,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/category_more_item"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     app:layout_columnWeight="1"
@@ -367,6 +373,7 @@
                                 android:padding="12dp">
 
                                 <TextView
+                                    android:id="@+id/recent_card_tax_tag"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:background="@drawable/bg_chip"
@@ -379,6 +386,7 @@
                                     android:textSize="10sp" />
 
                                 <TextView
+                                    android:id="@+id/recent_card_tax_title"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="8dp"
@@ -387,6 +395,7 @@
                                     android:textSize="12sp" />
 
                                 <TextView
+                                    android:id="@+id/recent_card_tax_time"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
@@ -398,6 +407,7 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/recent_card_secondary"
                         android:layout_width="180dp"
                         android:layout_height="wrap_content"
                         app:cardBackgroundColor="@color/card_background"
@@ -421,6 +431,7 @@
                                 android:padding="12dp">
 
                                 <TextView
+                                    android:id="@+id/recent_card_secondary_tag"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:background="@drawable/bg_chip"
@@ -433,6 +444,7 @@
                                     android:textSize="10sp" />
 
                                 <TextView
+                                    android:id="@+id/recent_card_secondary_title"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="8dp"
@@ -441,6 +453,7 @@
                                     android:textSize="12sp" />
 
                                 <TextView
+                                    android:id="@+id/recent_card_secondary_time"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"

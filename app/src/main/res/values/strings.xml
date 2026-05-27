@@ -20,10 +20,14 @@
     <string name="search_content_description">Search</string>
     <string name="profile_content_description">Profile</string>
     <string name="greeting_title">Hello, Christian</string>
+    <string name="dashboard_greeting_default">Hello</string>
+    <string name="dashboard_greeting_template">Hello, %1$s</string>
     <string name="greeting_subtitle">Your digital filing cabinet is organized and secure.</string>
     <string name="total_documents">Total Documents</string>
     <string name="total_documents_value">1,248</string>
     <string name="total_documents_delta">-12 this week</string>
+    <string name="dashboard_total_documents_synced">%1$d synced</string>
+    <string name="dashboard_week_delta_template">%1$d this week</string>
     <string name="categories_title">Categories</string>
     <string name="category_tax">Tax</string>
     <string name="category_medical">Medical</string>
@@ -38,6 +42,11 @@
     <string name="document_time_tax">Modified 2 hours ago</string>
     <string name="document_title_passport">Passport Renewal</string>
     <string name="document_time_passport">Modified yesterday</string>
+    <string name="dashboard_recent_empty_tag">DOC</string>
+    <string name="dashboard_recent_empty_title">No recent documents</string>
+    <string name="dashboard_recent_empty_time">Add a document to get started</string>
+    <string name="dashboard_recent_date_unknown">Modified recently</string>
+    <string name="dashboard_recent_modified_template">Modified %1$s</string>
     <string name="add_document">Add document</string>
     <string name="nav_home">Home</string>
     <string name="nav_documents">Documents</string>

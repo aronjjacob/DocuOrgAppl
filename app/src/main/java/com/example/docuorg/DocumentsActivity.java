@@ -28,6 +28,8 @@ import java.util.List;
 
 public class DocumentsActivity extends AppCompatActivity {
 
+    public static final String EXTRA_INITIAL_FILTER = "extra_initial_filter";
+
     private static final String FIRESTORE_USERS_COLLECTION = "users";
     private static final String FIRESTORE_DOCUMENTS_COLLECTION = "documents";
 
@@ -82,6 +84,7 @@ public class DocumentsActivity extends AppCompatActivity {
         }
 
         setupFilters();
+        applyInitialFilterFromIntent();
 
         findViewById(R.id.documents_fab).setOnClickListener(view -> {
             Intent intent = new Intent(this, AddDocumentActivity.class);
@@ -160,6 +163,43 @@ public class DocumentsActivity extends AppCompatActivity {
             return getString(R.string.doc_type_personal);
         }
         return null; // All
+    }
+
+    private void applyInitialFilterFromIntent() {
+        if (filtersGroup == null) {
+            return;
+        }
+        String initialFilter = getIntent() != null ? getIntent().getStringExtra(EXTRA_INITIAL_FILTER) : null;
+        if (initialFilter == null || initialFilter.trim().isEmpty()) {
+            return;
+        }
+        int targetChipId = mapCategoryToChipId(initialFilter);
+        if (targetChipId == View.NO_ID) {
+            return;
+        }
+        if (filtersGroup.getCheckedChipId() != targetChipId) {
+            filtersGroup.check(targetChipId);
+        }
+    }
+
+    private int mapCategoryToChipId(String category) {
+        String value = category.trim().toLowerCase();
+        if (value.contains("receipt")) {
+            return R.id.filter_receipts;
+        }
+        if (value.contains("medical")) {
+            return R.id.filter_medical;
+        }
+        if (value.contains("tax")) {
+            return R.id.filter_tax;
+        }
+        if (value.contains("personal") || value.contains("id")) {
+            return R.id.filter_personal;
+        }
+        if (value.contains("all") || value.contains("other")) {
+            return R.id.filter_all;
+        }
+        return View.NO_ID;
     }
 
     private void updateFilterChipStyles(int checkedId) {
